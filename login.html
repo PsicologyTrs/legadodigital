@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - LEGADO DIGITAL</title>
+    
+    <!-- Fuentes de Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Iconos -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <!-- BARRA DE NAVEGACIÓN -->
+    <nav class="top-nav">
+        <a href="index.html" class="nav-brand">LEGADO DIGITAL</a>
+        <div class="nav-user">
+            <a href="index.html" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Volver al Inicio
+            </a>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1 class="login-title">Iniciar Sesión</h1>
+                <p class="login-subtitle">Accede a tu cuenta de Legado Digital</p>
+            </div>
+
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="loginEmail">Correo Electrónico</label>
+                    <input type="email" id="loginEmail" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" class="form-control" required>
+                </div>
+
+                <div class="form-group user-type-group">
+                    <label>Tipo de Usuario</label>
+                    <div class="user-type-selector">
+                        <div class="user-type-option">
+                            <input type="radio" id="userTypeConsumer" name="userType" value="consumer" checked>
+                            <label for="userTypeConsumer">
+                                <i class="fas fa-user"></i>
+                                Consumidor
+                            </label>
+                        </div>
+                        <div class="user-type-option">
+                            <input type="radio" id="userTypeCreator" name="userType" value="creator">
+                            <label for="userTypeCreator">
+                                <i class="fas fa-palette"></i>
+                                Creador
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Iniciar Sesión
+                </button>
+
+                <div id="loginMessage" class="message" style="display: none;"></div>
+            </form>
+
+            <div class="login-footer">
+                <p>¿No tienes una cuenta? <a href="#" id="showRegister">Regístrate aquí</a></p>
+            </div>
+        </div>
+
+        <!-- FORMULARIO DE REGISTRO (oculto inicialmente) -->
+        <div class="login-card register-card" id="registerCard" style="display: none;">
+            <div class="login-header">
+                <h1 class="login-title">Registrarse</h1>
+                <p class="login-subtitle">Únete a nuestra comunidad</p>
+            </div>
+
+            <form id="registerForm" class="login-form">
+                <div class="form-group">
+                    <label for="registerName">Nombre Completo</label>
+                    <input type="text" id="registerName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerEmail">Correo Electrónico</label>
+                    <input type="email" id="registerEmail" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerPassword">Contraseña</label>
+                    <input type="password" id="registerPassword" class="form-control" required>
+                </div>
+
+                <div class="form-group user-type-group">
+                    <label>Tipo de Usuario</label>
+                    <div class="user-type-selector">
+                        <div class="user-type-option">
+                            <input type="radio" id="registerTypeConsumer" name="registerUserType" value="consumer" checked>
+                            <label for="registerTypeConsumer">
+                                <i class="fas fa-user"></i>
+                                Consumidor
+                            </label>
+                        </div>
+                        <div class="user-type-option">
+                            <input type="radio" id="registerTypeCreator" name="registerUserType" value="creator">
+                            <label for="registerTypeCreator">
+                                <i class="fas fa-palette"></i>
+                                Creador
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary login-btn">
+                    <i class="fas fa-user-plus"></i>
+                    Registrarse
+                </button>
+
+                <div id="registerMessage" class="message" style="display: none;"></div>
+            </form>
+
+            <div class="login-footer">
+                <p>¿Ya tienes una cuenta? <a href="#" id="showLogin">Inicia sesión aquí</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        © 2025 Legado Digital · Proyecto Historia y Patrimonio · Universidad del Magdalena · Contacto: mjcdiaz@unimagdalena.edu
+    </footer>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>

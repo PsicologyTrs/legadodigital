@@ -1,0 +1,2679 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LEGADO DIGITAL</title>
+
+<!-- Fuentes de Google -->
+<link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+<!-- Iconos -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f4efe6;
+    --earth:#6b4f2b;
+    --sand:#d6c6a6;
+    --sepia:#c19a6b;
+    --forest:#254035;
+    --accent:#b8863b;
+    --muted:#6b6b6b;
+    --max-width:1200px;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: "Playfair Display", Georgia, serif;
+    background: linear-gradient(180deg, var(--bg), #efeae1);
+    color:#111;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    line-height:1.45;
+  }
+
+  a{color:inherit; text-decoration: none;}
+  img,video{max-width:100%;display:block}
+
+  /* ========== BARRA DE NAVEGACIÓN SUPERIOR ========== */
+  .top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+
+  .nav-brand {
+    font-family: "Uncial Antiqua", cursive;
+    font-size: 24px;
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  .nav-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--forest);
+  }
+
+  .user-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+  }
+
+  .auth-buttons {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-login {
+    background: transparent;
+    color: var(--forest);
+    border: 1px solid var(--forest);
+  }
+
+  .btn-register {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .add-content-btn {
+    background: var(--forest);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  /* ========== MODALES ========== */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal.active {
+    display: flex;
+  }
+
+  .modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .modal-title {
+    font-family: "Uncial Antiqua", cursive;
+    font-size: 24px;
+    color: var(--forest);
+    margin: 0;
+  }
+
+  .close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--muted);
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--forest);
+    font-weight: 600;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .file-input-container {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+    width: 100%;
+  }
+
+  .file-input {
+    position: absolute;
+    left: -9999px;
+  }
+
+  .file-input-label {
+    display: block;
+    padding: 12px;
+    background: #f8f9fa;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .file-input-label:hover {
+    border-color: var(--accent);
+    background: rgba(184,134,59,0.05);
+  }
+
+  .file-input-label.has-file {
+    border-color: var(--accent);
+    background: rgba(184,134,59,0.1);
+    color: var(--forest);
+  }
+
+  .file-name {
+    margin-top: 5px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-submit:hover {
+    background: var(--earth);
+    transform: translateY(-2px);
+  }
+
+  .btn-submit:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Modal agregar contenido */
+  .content-type-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .content-type-btn {
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .content-type-btn.active {
+    border-color: var(--accent);
+    background: rgba(184,134,59,0.1);
+  }
+
+  .content-type-btn i {
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: var(--forest);
+  }
+
+  .content-form {
+    display: none;
+  }
+
+  .content-form.active {
+    display: block;
+  }
+
+  /* ========== HEADER CON CARRUSEL ========== */
+  header.hero{
+    position:relative;
+    height:72vh;
+    min-height:480px;
+    overflow:hidden;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    color:var(--accent);
+    margin-top: 70px;
+  }
+
+  /* Carrusel de imágenes */
+  .hero-carousel {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .carousel-slides {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .carousel-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .carousel-slide.active {
+    opacity: 1;
+  }
+
+  /* Imágenes del carrusel locales */
+  .carousel-slide:nth-child(1) { background-image: url('media/carrusel1.jfif'); }
+  .carousel-slide:nth-child(2) { background-image: url('media/carrusel2.jfif'); }
+  .carousel-slide:nth-child(3) { background-image: url('media/carrusel3.jfif'); }
+  .carousel-slide:nth-child(4) { background-image: url('media/carrusel4.jfif'); }
+  .carousel-slide:nth-child(5) { background-image: url('media/carrusel5.jfif'); }
+
+  .carousel-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(11,9,6,0.4), rgba(11,9,6,0.6));
+    mix-blend-mode: multiply;
+  }
+
+  .carousel-indicators {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+  }
+
+  .carousel-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    border: 2px solid rgba(255,255,255,0.8);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .carousel-indicator.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.2);
+  }
+
+  .hero-inner{
+    position:relative;
+    z-index:4;
+    width:100%;
+    max-width:var(--max-width);
+    padding:28px;
+    display:flex;
+    align-items:flex-end;
+    gap:28px;
+  }
+
+  .brand{
+    flex:1 1 50%;
+    display:flex;
+    gap:18px;
+    align-items:center;
+    color:var(--sand);
+  }
+
+  .brand .seal{
+    width:200px;
+    height:100px;
+    border-radius:12px;
+    background: linear-gradient(180deg, rgba(184,134,59,0.12), rgba(0,0,0,0.06));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:40px;
+    color:var(--accent);
+    border:2px solid rgba(184,134,59,0.15);
+    backdrop-filter: blur(2px);
+  }
+
+  .brand h1{
+    margin:0;
+    font-family: "Uncial Antiqua", "Static", cursive;
+    font-size:82px;
+    line-height:0.86;
+    color:var(--accent);
+    text-shadow:0 6px 22px rgba(0,0,0,0.35);
+    transform:translateY(6px);
+  }
+
+  .brand p.lead{
+    margin:8px 0 0;
+    color:var(--sand);
+    font-size:16px;
+    font-weight:600;
+  }
+
+  .hero-cards{
+    flex:1 1 50%;
+    display:flex;
+    gap:18px;
+    align-items:flex-end;
+    justify-content:flex-end;
+  }
+
+  .hero-card{
+    width:220px;
+    height:140px;
+    border-radius:12px;
+    overflow:hidden;
+    background:#fff;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+    transform: rotate(-6deg) translateY(24px);
+    transition: transform .6s ease, box-shadow .3s ease;
+    border:1px solid rgba(0,0,0,0.06);
+  }
+
+  .hero-card:nth-child(2){ transform: rotate(4deg) translateY(12px); width:260px; height:160px; }
+  .hero-card:nth-child(3){ transform: rotate(-2deg) translateY(36px); width:200px; height:120px; opacity:0.95; }
+
+  .hero-card img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .hero-card:hover{ transform:scale(1.04) rotate(0deg) translateY(0px); box-shadow:0 28px 60px rgba(0,0,0,0.28) }
+
+  .container{
+    width:100%;
+    max-width:var(--max-width);
+    margin:0 auto;
+    padding:40px 20px;
+  }
+
+  section.block{
+    margin:28px 0 64px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.56), rgba(250,245,238,0.56));
+    border-radius:18px;
+    padding:26px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+  }
+
+  section.block h2{
+    margin:0 0 28px;
+    font-family: "Uncial Antiqua", "Static", cursive;
+    font-size:36px;
+    color:var(--earth);
+    letter-spacing:1px;
+    text-align: center;
+  }
+
+  /* ========== DISEÑO LINEAL SIMPLIFICADO ========== */
+  .media-grid{
+    display:flex;
+    flex-direction: column;
+    gap:40px;
+  }
+
+  .content-item{
+    display:flex;
+    flex-direction: column;
+    gap:20px;
+    background: rgba(255,255,255,0.7);
+    padding:25px;
+    border-radius:12px;
+    border:1px solid rgba(0,0,0,0.04);
+    transition: transform .35s ease, box-shadow .35s ease, background .35s ease;
+    position: relative;
+  }
+
+  .content-item:hover{
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+
+  /* Botones de editar y eliminar */
+  .content-actions {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .content-item:hover .content-actions {
+    opacity: 1;
+  }
+
+  .action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+  }
+
+  .edit-btn {
+    background: var(--accent);
+    color: white;
+  }
+
+  .delete-btn {
+    background: #e74c3c;
+    color: white;
+  }
+
+  .action-btn:hover {
+    transform: scale(1.1);
+  }
+
+  /* Media Box - Videos e imágenes grandes */
+  .media-box{
+    background: #000;
+    min-height: 500px;
+    border-radius:12px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position: relative;
+    width: 100%;
+  }
+
+  .media-box video{
+    width:100%;
+    height: 100%;
+    max-height: 600px;
+    object-fit: contain;
+    display:block;
+  }
+
+  .media-box img{
+    width:100%;
+    height: 100%;
+    max-height: 600px;
+    object-fit: contain;
+    display:block;
+  }
+
+  /* Para audios */
+  .media-box.audio-box{
+    background: #f8f4ef;
+    min-height: 100px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .media-box.audio-box audio{
+    width: 100%;
+  }
+
+  /* Meta - Descripción debajo del media */
+  .meta{
+    padding:15px 5px;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+    width: 100%;
+  }
+
+  .meta h3{
+    margin:0;
+    font-family: "Uncial Antiqua", "Static", cursive;
+    font-size:32px;
+    color:var(--forest);
+    line-height:1.2;
+  }
+
+  .meta p.desc{
+    margin:0;
+    color:#2b2b2b;
+    font-size:16px;
+    line-height:1.6;
+  }
+
+  .meta .tags{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+  }
+
+  .tag{
+    background:var(--sand);
+    color:var(--earth);
+    padding:8px 15px;
+    border-radius:999px;
+    font-weight:600;
+    font-size:14px;
+    border:1px solid rgba(0,0,0,0.04);
+  }
+
+  .content-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+  }
+
+  .author-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .author-name {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  /* Estilo para descripción truncada - CORREGIDO */
+  .content-description {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    /* Propiedades estándar para compatibilidad futura */
+    display: -webkit-box;
+    display: -moz-box;
+    display: box;
+    -webkit-box-orient: vertical;
+    -moz-box-orient: vertical;
+    box-orient: vertical;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px){
+    .top-nav {
+      padding: 10px 15px;
+    }
+    
+    .nav-brand {
+      font-size: 20px;
+    }
+    
+    .add-content-btn span {
+      display: none;
+    }
+    
+    .hero-inner {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .hero-cards {
+      justify-content: center;
+      margin-top: 20px;
+    }
+    
+    .brand {
+      flex-direction: column;
+    }
+    
+    .brand h1 {
+      font-size: 60px;
+    }
+    
+    .content-item{
+      padding:20px;
+      gap:15px;
+    }
+    
+    .media-box{
+      min-height: 300px;
+    }
+    
+    .media-box video,
+    .media-box img{
+      max-height: 400px;
+    }
+    
+    .meta h3{
+      font-size:28px;
+    }
+    
+    .content-actions {
+      opacity: 1; /* Siempre visibles en móviles */
+      position: static;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+  }
+
+  @media (max-width: 480px){
+    .brand h1 {
+      font-size: 48px;
+    }
+    
+    .hero-card {
+      width: 150px;
+      height: 100px;
+    }
+    
+    .content-item{
+      padding:15px;
+    }
+    
+    .media-box{
+      min-height: 250px;
+    }
+    
+    .media-box video,
+    .media-box img{
+      max-height: 350px;
+    }
+    
+    .meta h3{
+      font-size:24px;
+    }
+    
+    .content-type-selector {
+      grid-template-columns: 1fr;
+    }
+  }
+  /* ========== FIN DISEÑO LINEAL ========== */
+
+  .divider{
+    height:1px;
+    background:linear-gradient(90deg, transparent, rgba(0,0,0,0.06), transparent);
+    margin:18px 0;
+  }
+
+  footer.site-footer{
+    text-align:center;
+    padding:28px;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  .reveal{ opacity:0; transform: translateY(18px) scale(.997); transition:opacity .7s ease, transform .7s cubic-bezier(.2,.9,.2,1) }
+  .reveal.show{ opacity:1; transform: translateY(0) scale(1) }
+
+  .floating{
+    position:absolute;
+    right:6%;
+    top:12%;
+    width:180px;
+    height:180px;
+    border-radius:14px;
+    overflow:hidden;
+    transform: rotate(-10deg);
+    opacity:0.9;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    border:1px solid rgba(0,0,0,0.06);
+  }
+  .floating img{ width:100%; height:100%; object-fit:cover; }
+
+  /* Estilos para la sección de frases */
+  .phrase-section {
+    background:linear-gradient(180deg,#f8f4ef 0%,#f3eee5 100%);
+    padding:80px 0;
+  }
+  
+  .phrase-item {
+    width:90%;
+    max-width:1000px;
+    background:rgba(255,255,255,0.85);
+    border-radius:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    padding:40px;
+    text-align:center;
+    transition:transform 0.3s ease,box-shadow 0.3s ease;
+    margin: 0 auto 60px;
+    position: relative;
+  }
+  
+  .phrase-item:hover {
+    transform: translateY(-5px);
+    box-shadow:0 15px 35px rgba(0,0,0,0.12);
+  }
+  
+  .phrase-text {
+    font-family:"Edwardian Script ITC","Great Vibes",cursive;
+    font-size:34px;
+    color:#6e4a28;
+    line-height:1.5;
+    margin-bottom:20px;
+    white-space: pre-line;
+  }
+  
+  .phrase-author {
+    font-family:"Playfair Display",serif;
+    font-size:20px;
+    color:#5b4636;
+    margin-bottom:10px;
+  }
+  
+  .phrase-context {
+    font-family:"Georgia",serif;
+    font-size:16px;
+    color:#4a4036;
+    line-height:1.6;
+    margin-bottom:12px;
+  }
+  
+  .phrase-tags {
+    display:flex;
+    justify-content:center;
+    gap:10px;
+  }
+  
+  .phrase-tag {
+    background:#6e4a28;
+    color:#fff;
+    padding:5px 12px;
+    border-radius:15px;
+    font-size:14px;
+  }
+
+  /* ========== ESTILOS PARA EL SISTEMA DE PAGO ========== */
+  .user-type-selector {
+    display: flex;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+  }
+  
+  .user-type {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    transition: background-color 0.3s;
+  }
+  
+  .user-type.active {
+    background-color: var(--accent);
+    color: white;
+  }
+
+  .payment-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 500px;
+    margin: 50px auto;
+  }
+  
+  .payment-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .payment-header h2 {
+    color: var(--forest);
+    margin-bottom: 10px;
+  }
+  
+  .payment-amount {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+  
+  .payment-details {
+    margin-bottom: 30px;
+  }
+  
+  .payment-methods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .payment-method {
+    flex: 1;
+    min-width: 120px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .payment-method.active {
+    border-color: var(--accent);
+    background-color: rgba(184, 134, 59, 0.1);
+  }
+  
+  .card-element {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+
+  .creator-badge {
+    background: var(--forest);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+
+  .payment-message {
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+    display: none;
+  }
+  
+  .payment-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+  
+  .payment-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+
+  .creator-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+  }
+
+  .creator-feature {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(184, 134, 59, 0.05);
+    border-radius: 8px;
+  }
+
+  .creator-feature i {
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<!-- BARRA DE NAVEGACIÓN SUPERIOR CORREGIDA -->
+<nav class="top-nav">
+  <div class="nav-brand">LEGADO DIGITAL</div>
+  <div class="nav-user">
+    <div id="userInfo" class="user-info" style="display: none;">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <span id="userName">Usuario</span>
+      <span class="creator-badge" id="creatorBadge" style="display: none;">Creador</span>
+      <button class="btn btn-login" id="logoutBtn">Cerrar Sesión</button>
+    </div>
+    <div id="authButtons" class="auth-buttons">
+      <button class="btn btn-login" id="loginBtn">Iniciar Sesión</button>
+      <button class="btn btn-register" id="registerBtn">Registrarse</button>
+    </div>
+    <button class="add-content-btn" id="addContentBtn" style="display: none;">
+      <i class="fas fa-plus"></i>
+      <span>Agregar Contenido</span>
+    </button>
+  </div>
+</nav>
+
+<!-- MODAL INICIAR SESIÓN -->
+<div class="modal" id="loginModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Iniciar Sesión</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="loginEmail">Correo Electrónico</label>
+        <input type="email" id="loginEmail" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" class="form-control" required>
+      </div>
+      <button type="submit" class="btn-submit">Iniciar Sesión</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL REGISTRARSE -->
+<div class="modal" id="registerModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Registrarse</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="registerName">Nombre Completo</label>
+        <input type="text" id="registerName" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="registerEmail">Correo Electrónico</label>
+        <input type="email" id="registerEmail" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="registerPassword">Contraseña</label>
+        <input type="password" id="registerPassword" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label>Tipo de Usuario</label>
+        <div class="user-type-selector">
+          <div class="user-type active" data-type="consumer">Consumidor</div>
+          <div class="user-type" data-type="creator">Creador</div>
+        </div>
+        <small style="color: var(--muted); display: block; margin-top: 5px;">
+          Los creadores pagan una cuota única de $15,000 COP para subir contenido
+        </small>
+      </div>
+      <button type="submit" class="btn-submit">Registrarse</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL PAGO PARA CREADORES -->
+<div class="modal" id="paymentModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Pago de Creador</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="payment-container" style="margin: 0; max-width: 100%;">
+      <div class="payment-header">
+        <h2>Cuota de Creador</h2>
+        <div class="payment-amount">$15,000 COP</div>
+        <p>Paga una sola vez para obtener acceso completo a las herramientas de creador</p>
+      </div>
+      
+      <div class="payment-details">
+        <h3>Beneficios:</h3>
+        <div class="creator-features">
+          <div class="creator-feature">
+            <i class="fas fa-video"></i>
+            <span>Subida ilimitada de videos</span>
+          </div>
+          <div class="creator-feature">
+            <i class="fas fa-image"></i>
+            <span>Subida de imágenes</span>
+          </div>
+          <div class="creator-feature">
+            <i class="fas fa-music"></i>
+            <span>Subida de audios</span>
+          </div>
+          <div class="creator-feature">
+            <i class="fas fa-quote-left"></i>
+            <span>Publicación de frases</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="payment-methods">
+        <div class="payment-method active" data-method="card">
+          <div>💳</div>
+          <div>Tarjeta</div>
+        </div>
+        <div class="payment-method" data-method="paypal">
+          <div>🔵</div>
+          <div>PayPal</div>
+        </div>
+        <div class="payment-method" data-method="pse">
+          <div>🏦</div>
+          <div>PSE</div>
+        </div>
+      </div>
+      
+      <div class="payment-form" id="cardForm">
+        <div class="form-group">
+          <label for="cardNumber">Número de tarjeta</label>
+          <input type="text" id="cardNumber" class="form-control" placeholder="1234 5678 9012 3456">
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex: 1;">
+            <label for="expiryDate">Fecha de expiración</label>
+            <input type="text" id="expiryDate" class="form-control" placeholder="MM/AA">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="cvv">CVV</label>
+            <input type="text" id="cvv" class="form-control" placeholder="123">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="cardName">Nombre en la tarjeta</label>
+          <input type="text" id="cardName" class="form-control" placeholder="Juan Pérez">
+        </div>
+      </div>
+      
+      <button class="btn-submit" id="payBtn">Pagar $15,000 COP</button>
+      <div class="payment-message" id="paymentMessage"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR CONTENIDO -->
+<div class="modal" id="addContentModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Agregar Contenido</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="content-type-selector">
+      <div class="content-type-btn active" data-type="video">
+        <i class="fas fa-video"></i>
+        <div>Video</div>
+      </div>
+      <div class="content-type-btn" data-type="audio">
+        <i class="fas fa-music"></i>
+        <div>Audio</div>
+      </div>
+      <div class="content-type-btn" data-type="image">
+        <i class="fas fa-image"></i>
+        <div>Imagen</div>
+      </div>
+      <div class="content-type-btn" data-type="phrase">
+        <i class="fas fa-quote-left"></i>
+        <div>Frase</div>
+      </div>
+    </div>
+    
+    <!-- Formulario para Video -->
+    <form id="videoForm" class="content-form active">
+      <div class="form-group">
+        <label for="videoTitle">Título</label>
+        <input type="text" id="videoTitle" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="videoFile">Archivo de Video (MP4)</label>
+        <div class="file-input-container">
+          <input type="file" id="videoFile" class="file-input" accept="video/mp4" required>
+          <label for="videoFile" class="file-input-label" id="videoFileLabel">
+            <i class="fas fa-upload"></i><br>
+            Seleccionar archivo MP4
+            <div class="file-name" id="videoFileName"></div>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="videoDescription">Descripción</label>
+        <textarea id="videoDescription" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="videoTags">Etiquetas (separadas por comas)</label>
+        <input type="text" id="videoTags" class="form-control" placeholder="video, patrimonio, cultura">
+      </div>
+      <button type="submit" class="btn-submit">Agregar Video</button>
+    </form>
+    
+    <!-- Formulario para Audio -->
+    <form id="audioForm" class="content-form">
+      <div class="form-group">
+        <label for="audioTitle">Título</label>
+        <input type="text" id="audioTitle" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="audioFile">Archivo de Audio (MP3)</label>
+        <div class="file-input-container">
+          <input type="file" id="audioFile" class="file-input" accept="audio/mpeg" required>
+          <label for="audioFile" class="file-input-label" id="audioFileLabel">
+            <i class="fas fa-upload"></i><br>
+            Seleccionar archivo MP3
+            <div class="file-name" id="audioFileName"></div>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="audioDescription">Descripción</label>
+        <textarea id="audioDescription" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="audioTags">Etiquetas (separadas por comas)</label>
+        <input type="text" id="audioTags" class="form-control" placeholder="audio, tradición, oral">
+      </div>
+      <button type="submit" class="btn-submit">Agregar Audio</button>
+    </form>
+    
+    <!-- Formulario para Imagen -->
+    <form id="imageForm" class="content-form">
+      <div class="form-group">
+        <label for="imageTitle">Título</label>
+        <input type="text" id="imageTitle" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="imageFile">Archivo de Imagen (JPG, PNG)</label>
+        <div class="file-input-container">
+          <input type="file" id="imageFile" class="file-input" accept="image/*" required>
+          <label for="imageFile" class="file-input-label" id="imageFileLabel">
+            <i class="fas fa-upload"></i><br>
+            Seleccionar archivo de imagen
+            <div class="file-name" id="imageFileName"></div>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="imageDescription">Descripción</label>
+        <textarea id="imageDescription" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="imageTags">Etiquetas (separadas por comas)</label>
+        <input type="text" id="imageTags" class="form-control" placeholder="foto, arquitectura, histórico">
+      </div>
+      <button type="submit" class="btn-submit">Agregar Imagen</button>
+    </form>
+    
+    <!-- Formulario para Frase -->
+    <form id="phraseForm" class="content-form">
+      <div class="form-group">
+        <label for="phraseText">Texto de la Frase</label>
+        <textarea id="phraseText" class="form-control" rows="4" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="phraseAuthor">Autor</label>
+        <input type="text" id="phraseAuthor" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="phraseContext">Contexto o Comentario</label>
+        <textarea id="phraseContext" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="phraseTags">Etiquetas (separadas por comas)</label>
+        <input type="text" id="phraseTags" class="form-control" placeholder="poesía, santa marta, cultura">
+      </div>
+      <button type="submit" class="btn-submit">Agregar Frase</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL EDITAR CONTENIDO -->
+<div class="modal" id="editContentModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Editar Contenido</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="content-type-selector" id="editTypeSelector">
+      <div class="content-type-btn active" data-type="video">
+        <i class="fas fa-video"></i>
+        <div>Video</div>
+      </div>
+      <div class="content-type-btn" data-type="audio">
+        <i class="fas fa-music"></i>
+        <div>Audio</div>
+      </div>
+      <div class="content-type-btn" data-type="image">
+        <i class="fas fa-image"></i>
+        <div>Imagen</div>
+      </div>
+      <div class="content-type-btn" data-type="phrase">
+        <i class="fas fa-quote-left"></i>
+        <div>Frase</div>
+      </div>
+    </div>
+    
+    <!-- Formulario para Editar Video -->
+    <form id="editVideoForm" class="content-form active">
+      <input type="hidden" id="editVideoId">
+      <div class="form-group">
+        <label for="editVideoTitle">Título</label>
+        <input type="text" id="editVideoTitle" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="editVideoFile">Archivo de Video (MP4)</label>
+        <div class="file-input-container">
+          <input type="file" id="editVideoFile" class="file-input" accept="video/mp4">
+          <label for="editVideoFile" class="file-input-label" id="editVideoFileLabel">
+            <i class="fas fa-upload"></i><br>
+            Cambiar archivo MP4 (opcional)
+            <div class="file-name" id="editVideoFileName"></div>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="editVideoDescription">Descripción</label>
+        <textarea id="editVideoDescription" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="editVideoTags">Etiquetas (separadas por comas)</label>
+        <input type="text" id="editVideoTags" class="form-control" placeholder="video, patrimonio, cultura">
+      </div>
+      <button type="submit" class="btn-submit">Actualizar Video</button>
+    </form>
+    
+    <!-- Formulario para Editar Audio -->
+    <form id="editAudioForm" class="content-form">
+      <input type="hidden" id="editAudioId">
+      <div class="form-group">
+        <label for="editAudioTitle">Título</label>
+        <input type="text" id="editAudioTitle" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="editAudioFile">Archivo de Audio (MP3)</label>
+        <div class="file-input-container">
+          <input type="file" id="editAudioFile" class="file-input" accept="audio/mpeg">
+          <label for="editAudioFile" class="file-input-label" id="editAudioFileLabel">
+            <i class="fas fa-upload"></i><br>
+            Cambiar archivo MP3 (opcional)
+            <div class="file-name" id="editAudioFileName"></div>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="editAudioDescription">Descripción</label>
+        <textarea id="editAudioDescription" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="editAudioTags">Etiquetas (separadas por comas)</label>
+        <input type="text" id="editAudioTags" class="form-control" placeholder="audio, tradición, oral">
+      </div>
+      <button type="submit" class="btn-submit">Actualizar Audio</button>
+    </form>
+    
+    <!-- Formulario para Editar Imagen -->
+    <form id="editImageForm" class="content-form">
+      <input type="hidden" id="editImageId">
+      <div class="form-group">
+        <label for="editImageTitle">Título</label>
+        <input type="text" id="editImageTitle" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="editImageFile">Archivo de Imagen (JPG, PNG)</label>
+        <div class="file-input-container">
+          <input type="file" id="editImageFile" class="file-input" accept="image/*">
+          <label for="editImageFile" class="file-input-label" id="editImageFileLabel">
+            <i class="fas fa-upload"></i><br>
+            Cambiar archivo de imagen (opcional)
+            <div class="file-name" id="editImageFileName"></div>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="editImageDescription">Descripción</label>
+        <textarea id="editImageDescription" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="editImageTags">Etiquetas (separadas por comas)</label>
+        <input type="text" id="editImageTags" class="form-control" placeholder="foto, arquitectura, histórico">
+      </div>
+      <button type="submit" class="btn-submit">Actualizar Imagen</button>
+    </form>
+    
+    <!-- Formulario para Editar Frase -->
+    <form id="editPhraseForm" class="content-form">
+      <input type="hidden" id="editPhraseId">
+      <div class="form-group">
+        <label for="editPhraseText">Texto de la Frase</label>
+        <textarea id="editPhraseText" class="form-control" rows="4" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="editPhraseAuthor">Autor</label>
+        <input type="text" id="editPhraseAuthor" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="editPhraseContext">Contexto o Comentario</label>
+        <textarea id="editPhraseContext" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="editPhraseTags">Etiquetas (separadas por comas)</label>
+        <input type="text" id="editPhraseTags" class="form-control" placeholder="poesía, santa marta, cultura">
+      </div>
+      <button type="submit" class="btn-submit">Actualizar Frase</button>
+    </form>
+  </div>
+</div>
+
+<!-- HERO / HEADER CON CARRUSEL -->
+<header class="hero" id="hero">
+  <div class="hero-carousel" aria-hidden="true">
+    <div class="carousel-slides">
+      <div class="carousel-slide"></div>
+      <div class="carousel-slide"></div>
+      <div class="carousel-slide"></div>
+      <div class="carousel-slide"></div>
+      <div class="carousel-slide"></div>
+    </div>
+    <div class="carousel-overlay" aria-hidden="true"></div>
+    <div class="carousel-indicators">
+      <div class="carousel-indicator" data-slide="0"></div>
+      <div class="carousel-indicator" data-slide="1"></div>
+      <div class="carousel-indicator" data-slide="2"></div>
+      <div class="carousel-indicator" data-slide="3"></div>
+      <div class="carousel-indicator" data-slide="4"></div>
+    </div>
+  </div>
+
+  <div class="hero-inner container">
+    <div class="brand">
+      <div class="seal" aria-hidden="true">
+        <img src="media/logou.png" alt="Logo Universidad">
+      </div>
+      <div>
+        <h1>LEGADO DIGITAL</h1>
+        <p class="lead">Donde la historia se escucha, se ve y se siente.</p>
+      </div>
+    </div>
+
+    <div class="hero-cards" aria-hidden="true">
+      <div class="hero-card"><img src="media/miniatura1.jfif" alt="Miniatura 1"></div>
+      <div class="hero-card"><img src="media/miniatura2.jfif" alt="Miniatura 2"></div>
+      <div class="hero-card"><img src="media/miniatura3.jfif" alt="Miniatura 3"></div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="container">
+
+  <!-- VIDEOS -->
+  <section class="block reveal" id="videos">
+    <h2>Videos del Patrimonio</h2>
+    <div class="media-grid" id="videosGrid">
+      <!-- Contenido se cargará aquí -->
+    </div>
+  </section>
+
+  <!-- AUDIOS -->
+  <section class="block reveal" id="audios">
+    <h2>Relatos Sonoros</h2>
+    <div class="media-grid" id="audiosGrid">
+      <!-- Contenido se cargará aquí -->
+    </div>
+  </section>
+
+  <!-- IMÁGENES -->
+  <section class="block reveal" id="imagenes">
+    <h2>Galería de Imágenes</h2>
+    <div class="media-grid" id="imagesGrid">
+      <!-- Contenido se cargará aquí -->
+    </div>
+  </section>
+
+</main>
+
+<!-- SECCIÓN DE FRASES -->
+<section class="phrase-section reveal" id="frases">
+  <h2 style="font-family:'Uncial Antiqua','Great Vibes',cursive;font-size:48px;color:#6e4a28;text-align:center;margin-bottom:60px;">
+    Frases y poesía
+  </h2>
+
+  <div id="phrasesGrid">
+    <!-- Contenido se cargará aquí -->
+  </div>
+</section>
+
+<!-- CONCLUSIÓN / MURAL -->
+<section class="block reveal" id="mural">
+  <h2>Mural de Reflexiones</h2>
+
+  <div style="display:flex;gap:18px;flex-wrap:wrap">
+    <textarea id="nota" placeholder="Escribe una reflexión y presiona guardar..." style="flex:1;min-height:120px;padding:12px;border-radius:8px;border:1px solid rgba(0,0,0,0.06)"></textarea>
+    <div style="width:320px;display:flex;flex-direction:column;gap:12px">
+      <button id="guardarNota" style="padding:12px;border-radius:8px;background:var(--accent);color:#fff;border:none;font-weight:700;cursor:pointer">Guardar nota (local)</button>
+      <small style="color:var(--muted)">Las notas se guardan en tu navegador (localStorage) para pruebas.</small>
+    </div>
+  </div>
+
+  <div id="notasGuardadas" style="margin-top:18px;display:grid;gap:8px"></div>
+</section>
+
+<footer class="site-footer">
+  © 2025 Legado Digital · Proyecto Historia y Patrimonio · Universidad del Magdalena · Contacto: mjcdiaz@unimagdalena.edu
+</footer>
+
+<script>
+// ========== SISTEMA DE USUARIOS, PAGOS Y CONTENIDO ==========
+
+// Datos iniciales (simulando una base de datos)
+let users = JSON.parse(localStorage.getItem('legado_users')) || [];
+let content = JSON.parse(localStorage.getItem('legado_content')) || [];
+let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null;
+
+// Elementos del DOM
+const userInfo = document.getElementById('userInfo');
+const authButtons = document.getElementById('authButtons');
+const addContentBtn = document.getElementById('addContentBtn');
+const userName = document.getElementById('userName');
+const userAvatar = document.getElementById('userAvatar');
+const creatorBadge = document.getElementById('creatorBadge');
+const loginBtn = document.getElementById('loginBtn');
+const registerBtn = document.getElementById('registerBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const loginModal = document.getElementById('loginModal');
+const registerModal = document.getElementById('registerModal');
+const paymentModal = document.getElementById('paymentModal');
+const addContentModal = document.getElementById('addContentModal');
+const editContentModal = document.getElementById('editContentModal');
+const closeModals = document.querySelectorAll('.close-modal');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const userTypes = document.querySelectorAll('.user-type');
+const payBtn = document.getElementById('payBtn');
+const paymentMessage = document.getElementById('paymentMessage');
+const paymentMethods = document.querySelectorAll('.payment-method');
+
+// Grids para mostrar contenido
+const videosGrid = document.getElementById('videosGrid');
+const audiosGrid = document.getElementById('audiosGrid');
+const imagesGrid = document.getElementById('imagesGrid');
+const phrasesGrid = document.getElementById('phrasesGrid');
+
+// Variables de estado
+let currentUserType = 'consumer';
+let currentPaymentMethod = 'card';
+
+// Inicializar la aplicación
+function initApp() {
+  updateUI();
+  loadInitialContent();
+  loadContent();
+  
+  // Event Listeners
+  loginBtn.addEventListener('click', () => showModal(loginModal));
+  registerBtn.addEventListener('click', () => showModal(registerModal));
+  addContentBtn.addEventListener('click', () => {
+    if (currentUser && currentUser.isCreator && currentUser.hasPaid) {
+      showModal(addContentModal);
+    } else {
+      alert('Debes ser un creador verificado para agregar contenido. Completa el proceso de pago primero.');
+    }
+  });
+  logoutBtn.addEventListener('click', logout);
+  
+  closeModals.forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.remove('active');
+      });
+    });
+  });
+  
+  // Cerrar modal al hacer clic fuera
+  document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+      }
+    });
+  });
+  
+  // Formularios
+  loginForm.addEventListener('submit', handleLogin);
+  registerForm.addEventListener('submit', handleRegister);
+  
+  // Selector de tipo de usuario
+  userTypes.forEach(type => {
+    type.addEventListener('click', () => {
+      userTypes.forEach(t => t.classList.remove('active'));
+      type.classList.add('active');
+      currentUserType = type.getAttribute('data-type');
+    });
+  });
+  
+  // Selector de tipo de contenido
+  document.querySelectorAll('.content-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.type;
+      selectContentType(type, 'add');
+    });
+  });
+  
+  // Selector de tipo de contenido para editar
+  document.querySelectorAll('#editTypeSelector .content-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.type;
+      selectContentType(type, 'edit');
+    });
+  });
+  
+  // Métodos de pago
+  paymentMethods.forEach(method => {
+    method.addEventListener('click', () => {
+      paymentMethods.forEach(m => m.classList.remove('active'));
+      method.classList.add('active');
+      currentPaymentMethod = method.getAttribute('data-method');
+    });
+  });
+  
+  // Pago
+  payBtn.addEventListener('click', handlePayment);
+  
+  // Formularios de contenido
+  document.getElementById('videoForm').addEventListener('submit', (e) => handleAddContent(e, 'video'));
+  document.getElementById('audioForm').addEventListener('submit', (e) => handleAddContent(e, 'audio'));
+  document.getElementById('imageForm').addEventListener('submit', (e) => handleAddContent(e, 'image'));
+  document.getElementById('phraseForm').addEventListener('submit', (e) => handleAddContent(e, 'phrase'));
+  
+  // Formularios de edición
+  document.getElementById('editVideoForm').addEventListener('submit', (e) => handleEditContent(e, 'video'));
+  document.getElementById('editAudioForm').addEventListener('submit', (e) => handleEditContent(e, 'audio'));
+  document.getElementById('editImageForm').addEventListener('submit', (e) => handleEditContent(e, 'image'));
+  document.getElementById('editPhraseForm').addEventListener('submit', (e) => handleEditContent(e, 'phrase'));
+  
+  // Manejar archivos seleccionados
+  setupFileInputs();
+}
+
+// Configurar inputs de archivo
+function setupFileInputs() {
+  // Video
+  const videoFileInput = document.getElementById('videoFile');
+  const videoFileLabel = document.getElementById('videoFileLabel');
+  const videoFileName = document.getElementById('videoFileName');
+  
+  videoFileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+      videoFileLabel.classList.add('has-file');
+      videoFileName.textContent = this.files[0].name;
+    } else {
+      videoFileLabel.classList.remove('has-file');
+      videoFileName.textContent = '';
+    }
+  });
+  
+  // Audio
+  const audioFileInput = document.getElementById('audioFile');
+  const audioFileLabel = document.getElementById('audioFileLabel');
+  const audioFileName = document.getElementById('audioFileName');
+  
+  audioFileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+      audioFileLabel.classList.add('has-file');
+      audioFileName.textContent = this.files[0].name;
+    } else {
+      audioFileLabel.classList.remove('has-file');
+      audioFileName.textContent = '';
+    }
+  });
+  
+  // Imagen
+  const imageFileInput = document.getElementById('imageFile');
+  const imageFileLabel = document.getElementById('imageFileLabel');
+  const imageFileName = document.getElementById('imageFileName');
+  
+  imageFileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+      imageFileLabel.classList.add('has-file');
+      imageFileName.textContent = this.files[0].name;
+    } else {
+      imageFileLabel.classList.remove('has-file');
+      imageFileName.textContent = '';
+    }
+  });
+  
+  // Editar Video
+  const editVideoFileInput = document.getElementById('editVideoFile');
+  const editVideoFileLabel = document.getElementById('editVideoFileLabel');
+  const editVideoFileName = document.getElementById('editVideoFileName');
+  
+  editVideoFileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+      editVideoFileLabel.classList.add('has-file');
+      editVideoFileName.textContent = this.files[0].name;
+    } else {
+      editVideoFileLabel.classList.remove('has-file');
+      editVideoFileName.textContent = '';
+    }
+  });
+  
+  // Editar Audio
+  const editAudioFileInput = document.getElementById('editAudioFile');
+  const editAudioFileLabel = document.getElementById('editAudioFileLabel');
+  const editAudioFileName = document.getElementById('editAudioFileName');
+  
+  editAudioFileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+      editAudioFileLabel.classList.add('has-file');
+      editAudioFileName.textContent = this.files[0].name;
+    } else {
+      editAudioFileLabel.classList.remove('has-file');
+      editAudioFileName.textContent = '';
+    }
+  });
+  
+  // Editar Imagen
+  const editImageFileInput = document.getElementById('editImageFile');
+  const editImageFileLabel = document.getElementById('editImageFileLabel');
+  const editImageFileName = document.getElementById('editImageFileName');
+  
+  editImageFileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+      editImageFileLabel.classList.add('has-file');
+      editImageFileName.textContent = this.files[0].name;
+    } else {
+      editImageFileLabel.classList.remove('has-file');
+      editImageFileName.textContent = '';
+    }
+  });
+}
+
+// Cargar contenido inicial con tus archivos locales
+function loadInitialContent() {
+  // Si no hay contenido guardado, cargar el contenido inicial
+  if (content.length === 0) {
+    content = [
+      // Videos iniciales con tus rutas originales
+      {
+        id: '1',
+        type: 'video',
+        title: 'Entrevista: Memoria del barrio',
+        url: 'media/video1.mp4',
+        description: 'Entrevista con habitantes sobre prácticas tradicionales. Año: 2024. Duración: 12:34.',
+        tags: ['Video', 'Oral History', 'Región: Andina'],
+        userId: 'system',
+        userName: 'Sistema',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '2',
+        type: 'video',
+        title: 'Clase de Museología',
+        url: 'media/Clase de Museología - Historia y Patrimonio.mp4',
+        description: 'Clase sobre historia y patrimonio cultural. Año: 2024. Duración: 45:20.',
+        tags: ['Documental', 'Educación', 'Patrimonio'],
+        userId: 'system',
+        userName: 'Sistema',
+        createdAt: new Date().toISOString()
+      },
+      
+      // Audios iniciales con tus rutas originales
+      {
+        id: '3',
+        type: 'audio',
+        title: 'Relato: Canto de los oficios',
+        url: 'media/podcast-prostitucion.mpeg',
+        description: 'Registro de canto ritual. Contexto histórico y transcripción breve. Duración: 8:45.',
+        tags: ['Audio', 'Tradición oral', 'Canto'],
+        userId: 'system',
+        userName: 'Sistema',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '4',
+        type: 'audio',
+        title: 'Podcast: Historia y Patrimonio',
+        url: 'media/Podcast - Universidad del Magdalena.mp3',
+        description: 'Conversación sobre la importancia del patrimonio cultural. Duración: 32:10.',
+        tags: ['Podcast', 'Conversación', 'Cultura'],
+        userId: 'system',
+        userName: 'Sistema',
+        createdAt: new Date().toISOString()
+      },
+      
+      // Imágenes iniciales con tus rutas originales
+      {
+        id: '5',
+        type: 'image',
+        title: 'Fotografía: Plaza central',
+        url: 'media/img1.jfif',
+        description: 'Fotografía histórica de la plaza principal y su función comunitaria. Año: 1950. Autor: Fotógrafo local.',
+        tags: ['Foto', 'Espacio público', 'Histórico'],
+        userId: 'system',
+        userName: 'Sistema',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '6',
+        type: 'image',
+        title: 'Arquitectura tradicional',
+        url: 'media/img2.jfif',
+        description: 'Edificio representativo de la arquitectura tradicional de la región. Año: 1920.',
+        tags: ['Arquitectura', 'Patrimonio', 'Edificio'],
+        userId: 'system',
+        userName: 'Sistema',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '7',
+        type: 'image',
+        title: 'Patrimonio cultural',
+        url: 'media/img3.jfif',
+        description: 'Representación del patrimonio cultural de la región.',
+        tags: ['Cultura', 'Patrimonio', 'Tradición'],
+        userId: 'system',
+        userName: 'Sistema',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '8',
+        type: 'image',
+        title: 'Arquitectura histórica',
+        url: 'media/img4.jfif',
+        description: 'Ejemplo de arquitectura histórica preservada.',
+        tags: ['Arquitectura', 'Histórico', 'Conservación'],
+        userId: 'system',
+        userName: 'Sistema',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '9',
+        type: 'image',
+        title: 'Patrimonio arquitectónico',
+        url: 'media/img5.jfif',
+        description: 'Detalle del patrimonio arquitectónico regional.',
+        tags: ['Arquitectura', 'Patrimonio', 'Detalle'],
+        userId: 'system',
+        userName: 'Sistema',
+        createdAt: new Date().toISOString()
+      },
+      
+      // Frases iniciales (se mantienen igual)
+      {
+        id: '10',
+        type: 'phrase',
+        text: "Santa Marta, tierra de sueños\nSanta Marta, tierra de sueños,\ncuna de historias y aventuras,\ntu brisa guarda secretos guardados,\ntu mar susurra canciones de gritos.\nLa historia enriquece nuestra vida,\ntus calles guardan huellas sagradas,\nrecuerdos de luchas y victorias,\nde un pasado que nunca se apaga.\nTus montañas besan el cielo,\ntu arena acaricia los pies cansados,\ny en cada rincón florece la vida,\ncomo un tesoro jamás olvidado.\nSanta Marta, puerto de anhelos,\nespejo de culturas que se abrazan,\neres raíz, presente y futuro,\nuna tierra que sueña y nunca se cansa.\n_ Wendy Gómez O.",
+        author: 'Wendy Gómez O.',
+        context: 'Poema dedicado a Santa Marta, resaltando su belleza natural y riqueza cultural.',
+        tags: ['Poesía', 'Santa Marta', 'Naturaleza'],
+        userId: 'system',
+        userName: 'Sistema',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '11',
+        type: 'phrase',
+        text: "Santa Marta de mi corazón\nSanta Marta, mi corazón es tuyo…\nLlegué al mar,\ndonde el viento sopla sin horizonte,\ndonde las olas golpean la arena,\ndonde el sol brilla\ncomo las estrellas en la noche.\nSanta Marta de mi corazón,\nescribiste mi historia\ny aún lo haces.\nQuiero seguir escribiéndote,\nporque hablar de tus hazañas\nme enamora más de ti.\nConocer tu historia\nme recuerda el pasado\nque tuviste que atravesar;\nconocer tu cultura\nme hace caer rendido en amor.\nTu gente es dinamita sonriente,\nreímos, compartimos,\ny el \"¡ay ombe!\"\nno se borra de nuestra boca,\nson palabras que adornan\ntu memoria y tu historia.",
+        author: 'Anónimo',
+        context: 'Expresión de amor y conexión profunda con la ciudad y su gente.',
+        tags: ['Cita', 'Amor', 'Cultura'],
+        userId: 'system',
+        userName: 'Sistema',
+        createdAt: new Date().toISOString()
+      }
+    ];
+    
+    localStorage.setItem('legado_content', JSON.stringify(content));
+  }
+}
+
+// ... (el resto del código JavaScript se mantiene igual que en la versión anterior) ...
+
+// Actualizar la interfaz según el estado del usuario
+function updateUI() {
+  if (currentUser) {
+    userInfo.style.display = 'flex';
+    authButtons.style.display = 'none';
+    
+    // Mostrar botón de agregar contenido solo para creadores verificados
+    if (currentUser.isCreator && currentUser.hasPaid) {
+      addContentBtn.style.display = 'flex';
+      creatorBadge.style.display = 'inline-block';
+    } else {
+      addContentBtn.style.display = 'none';
+      creatorBadge.style.display = 'none';
+    }
+    
+    userName.textContent = currentUser.name;
+    userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+  } else {
+    userInfo.style.display = 'none';
+    authButtons.style.display = 'flex';
+    addContentBtn.style.display = 'none';
+    creatorBadge.style.display = 'none';
+  }
+}
+
+// Mostrar modal
+function showModal(modal) {
+  document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+  modal.classList.add('active');
+}
+
+// Seleccionar tipo de contenido
+function selectContentType(type, mode) {
+  const prefix = mode === 'edit' ? 'edit' : '';
+  const container = mode === 'edit' ? editContentModal : addContentModal;
+  
+  // Actualizar botones
+  const btns = container.querySelectorAll('.content-type-btn');
+  btns.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.type === type);
+  });
+  
+  // Actualizar formularios
+  const forms = container.querySelectorAll('.content-form');
+  forms.forEach(form => {
+    form.classList.toggle('active', form.id === `${prefix}${type.charAt(0).toUpperCase() + type.slice(1)}Form`);
+  });
+}
+
+// Manejar inicio de sesión
+function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  
+  const user = users.find(u => u.email === email && u.password === password);
+  
+  if (user) {
+    currentUser = user;
+    localStorage.setItem('legado_currentUser', JSON.stringify(currentUser));
+    updateUI();
+    loginModal.classList.remove('active');
+    loginForm.reset();
+    loadContent(); // Recargar contenido para mostrar botones de edición
+    alert('¡Inicio de sesión exitoso!');
+  } else {
+    alert('Correo electrónico o contraseña incorrectos');
+  }
+}
+
+// Manejar registro
+function handleRegister(e) {
+  e.preventDefault();
+  const name = document.getElementById('registerName').value;
+  const email = document.getElementById('registerEmail').value;
+  const password = document.getElementById('registerPassword').value;
+  
+  // Verificar si el usuario ya existe
+  if (users.find(u => u.email === email)) {
+    alert('Este correo electrónico ya está registrado');
+    return;
+  }
+  
+  const isCreator = currentUserType === 'creator';
+  
+  const newUser = {
+    id: Date.now().toString(),
+    name,
+    email,
+    password,
+    isCreator: isCreator,
+    hasPaid: !isCreator, // Los consumidores no necesitan pagar, los creadores sí
+    createdAt: new Date().toISOString()
+  };
+  
+  users.push(newUser);
+  localStorage.setItem('legado_users', JSON.stringify(users));
+  
+  currentUser = newUser;
+  localStorage.setItem('legado_currentUser', JSON.stringify(currentUser));
+  
+  updateUI();
+  registerModal.classList.remove('active');
+  registerForm.reset();
+  
+  if (isCreator && !newUser.hasPaid) {
+    // Si es creador y no ha pagado, mostrar modal de pago
+    showModal(paymentModal);
+  } else {
+    alert('¡Registro exitoso!');
+    loadContent(); // Recargar contenido para mostrar botones de edición
+  }
+}
+
+// Manejar pago
+function handlePayment() {
+  // Validación básica
+  if (currentPaymentMethod === 'card') {
+    const cardNumber = document.getElementById('cardNumber').value;
+    const expiryDate = document.getElementById('expiryDate').value;
+    const cvv = document.getElementById('cvv').value;
+    const cardName = document.getElementById('cardName').value;
+    
+    if (!cardNumber || !expiryDate || !cvv || !cardName) {
+      showPaymentMessage('Por favor completa todos los campos de la tarjeta', 'error');
+      return;
+    }
+  }
+  
+  // Simulación de procesamiento de pago
+  showPaymentMessage('Procesando pago...', 'info');
+  
+  setTimeout(() => {
+    // Simulación de pago exitoso
+    showPaymentMessage('¡Pago exitoso! Ahora tienes acceso completo a las herramientas de creador.', 'success');
+    
+    // Actualizar usuario
+    currentUser.hasPaid = true;
+    localStorage.setItem('legado_currentUser', JSON.stringify(currentUser));
+    
+    // Actualizar en la lista de usuarios
+    const userIndex = users.findIndex(u => u.id === currentUser.id);
+    if (userIndex !== -1) {
+      users[userIndex] = currentUser;
+      localStorage.setItem('legado_users', JSON.stringify(users));
+    }
+    
+    // Actualizar UI
+    updateUI();
+    
+    // Cerrar modal después de 2 segundos
+    setTimeout(() => {
+      paymentModal.classList.remove('active');
+      loadContent(); // Recargar contenido para mostrar botones de edición
+    }, 2000);
+  }, 2000);
+}
+
+// Mostrar mensaje de pago
+function showPaymentMessage(message, type) {
+  paymentMessage.textContent = message;
+  paymentMessage.className = `payment-message ${type}`;
+  paymentMessage.style.display = 'block';
+}
+
+// Cerrar sesión
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('legado_currentUser');
+  updateUI();
+  loadContent(); // Recargar contenido para ocultar botones de edición
+  alert('Sesión cerrada');
+}
+
+// Manejar agregar contenido
+function handleAddContent(e, type) {
+  e.preventDefault();
+  
+  if (!currentUser || !currentUser.isCreator || !currentUser.hasPaid) {
+    alert('Debes ser un creador verificado para agregar contenido');
+    return;
+  }
+  
+  let contentData = {};
+  
+  switch (type) {
+    case 'video':
+      const videoFile = document.getElementById('videoFile').files[0];
+      if (!videoFile) {
+        alert('Por favor, selecciona un archivo de video');
+        return;
+      }
+      
+      // Simular subida de archivo (en un entorno real, aquí se subiría al servidor)
+      const videoUrl = URL.createObjectURL(videoFile);
+      contentData = {
+        title: document.getElementById('videoTitle').value,
+        url: videoUrl,
+        description: document.getElementById('videoDescription').value,
+        tags: document.getElementById('videoTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+      };
+      break;
+      
+    case 'audio':
+      const audioFile = document.getElementById('audioFile').files[0];
+      if (!audioFile) {
+        alert('Por favor, selecciona un archivo de audio');
+        return;
+      }
+      
+      // Simular subida de archivo
+      const audioUrl = URL.createObjectURL(audioFile);
+      contentData = {
+        title: document.getElementById('audioTitle').value,
+        url: audioUrl,
+        description: document.getElementById('audioDescription').value,
+        tags: document.getElementById('audioTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+      };
+      break;
+      
+    case 'image':
+      const imageFile = document.getElementById('imageFile').files[0];
+      if (!imageFile) {
+        alert('Por favor, selecciona un archivo de imagen');
+        return;
+      }
+      
+      // Simular subida de archivo
+      const imageUrl = URL.createObjectURL(imageFile);
+      contentData = {
+        title: document.getElementById('imageTitle').value,
+        url: imageUrl,
+        description: document.getElementById('imageDescription').value,
+        tags: document.getElementById('imageTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+      };
+      break;
+      
+    case 'phrase':
+      contentData = {
+        text: document.getElementById('phraseText').value,
+        author: document.getElementById('phraseAuthor').value,
+        context: document.getElementById('phraseContext').value,
+        tags: document.getElementById('phraseTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+      };
+      break;
+  }
+  
+  const newContent = {
+    id: Date.now().toString(),
+    type,
+    ...contentData,
+    userId: currentUser.id,
+    userName: currentUser.name,
+    createdAt: new Date().toISOString()
+  };
+  
+  content.push(newContent);
+  localStorage.setItem('legado_content', JSON.stringify(content));
+  
+  // Limpiar formulario
+  e.target.reset();
+  document.querySelectorAll('.file-input-label').forEach(label => {
+    label.classList.remove('has-file');
+  });
+  document.querySelectorAll('.file-name').forEach(el => {
+    el.textContent = '';
+  });
+  
+  addContentModal.classList.remove('active');
+  
+  // Recargar contenido
+  loadContent();
+  
+  alert('¡Contenido agregado exitosamente!');
+}
+
+// Manejar edición de contenido
+function handleEditContent(e, type) {
+  e.preventDefault();
+  
+  if (!currentUser) {
+    alert('Debes iniciar sesión para editar contenido');
+    return;
+  }
+  
+  let contentData = {};
+  let contentId = '';
+  
+  switch (type) {
+    case 'video':
+      contentId = document.getElementById('editVideoId').value;
+      const videoFile = document.getElementById('editVideoFile').files[0];
+      
+      // Buscar el contenido existente
+      const existingVideo = content.find(item => item.id === contentId);
+      if (!existingVideo) {
+        alert('Error: Contenido no encontrado');
+        return;
+      }
+      
+      // Usar la URL existente si no se sube un nuevo archivo
+      const videoUrl = videoFile ? URL.createObjectURL(videoFile) : existingVideo.url;
+      
+      contentData = {
+        title: document.getElementById('editVideoTitle').value,
+        url: videoUrl,
+        description: document.getElementById('editVideoDescription').value,
+        tags: document.getElementById('editVideoTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+      };
+      break;
+      
+    case 'audio':
+      contentId = document.getElementById('editAudioId').value;
+      const audioFile = document.getElementById('editAudioFile').files[0];
+      
+      const existingAudio = content.find(item => item.id === contentId);
+      if (!existingAudio) {
+        alert('Error: Contenido no encontrado');
+        return;
+      }
+      
+      const audioUrl = audioFile ? URL.createObjectURL(audioFile) : existingAudio.url;
+      
+      contentData = {
+        title: document.getElementById('editAudioTitle').value,
+        url: audioUrl,
+        description: document.getElementById('editAudioDescription').value,
+        tags: document.getElementById('editAudioTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+      };
+      break;
+      
+    case 'image':
+      contentId = document.getElementById('editImageId').value;
+      const imageFile = document.getElementById('editImageFile').files[0];
+      
+      const existingImage = content.find(item => item.id === contentId);
+      if (!existingImage) {
+        alert('Error: Contenido no encontrado');
+        return;
+      }
+      
+      const imageUrl = imageFile ? URL.createObjectURL(imageFile) : existingImage.url;
+      
+      contentData = {
+        title: document.getElementById('editImageTitle').value,
+        url: imageUrl,
+        description: document.getElementById('editImageDescription').value,
+        tags: document.getElementById('editImageTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+      };
+      break;
+      
+    case 'phrase':
+      contentId = document.getElementById('editPhraseId').value;
+      
+      const existingPhrase = content.find(item => item.id === contentId);
+      if (!existingPhrase) {
+        alert('Error: Contenido no encontrado');
+        return;
+      }
+      
+      contentData = {
+        text: document.getElementById('editPhraseText').value,
+        author: document.getElementById('editPhraseAuthor').value,
+        context: document.getElementById('editPhraseContext').value,
+        tags: document.getElementById('editPhraseTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+      };
+      break;
+  }
+  
+  // Actualizar el contenido
+  const contentIndex = content.findIndex(item => item.id === contentId);
+  if (contentIndex !== -1) {
+    content[contentIndex] = {
+      ...content[contentIndex],
+      ...contentData,
+      updatedAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem('legado_content', JSON.stringify(content));
+    
+    // Limpiar formulario
+    e.target.reset();
+    document.querySelectorAll('#editContentModal .file-input-label').forEach(label => {
+      label.classList.remove('has-file');
+    });
+    document.querySelectorAll('#editContentModal .file-name').forEach(el => {
+      el.textContent = '';
+    });
+    
+    editContentModal.classList.remove('active');
+    
+    // Recargar contenido
+    loadContent();
+    
+    alert('¡Contenido actualizado exitosamente!');
+  } else {
+    alert('Error: No se pudo encontrar el contenido para editar');
+  }
+}
+
+// Eliminar contenido
+function deleteContent(contentId) {
+  if (!currentUser) {
+    alert('Debes iniciar sesión para eliminar contenido');
+    return;
+  }
+  
+  const contentItem = content.find(item => item.id === contentId);
+  if (!contentItem) {
+    alert('Error: Contenido no encontrado');
+    return;
+  }
+  
+  // Verificar que el usuario es el propietario del contenido
+  if (contentItem.userId !== currentUser.id && contentItem.userId !== 'system') {
+    alert('Solo puedes eliminar tu propio contenido');
+    return;
+  }
+  
+  if (confirm('¿Estás seguro de que quieres eliminar este contenido? Esta acción no se puede deshacer.')) {
+    content = content.filter(item => item.id !== contentId);
+    localStorage.setItem('legado_content', JSON.stringify(content));
+    
+    // Recargar contenido
+    loadContent();
+    
+    alert('¡Contenido eliminado exitosamente!');
+  }
+}
+
+// Editar contenido
+function editContent(contentId) {
+  if (!currentUser) {
+    alert('Debes iniciar sesión para editar contenido');
+    return;
+  }
+  
+  const contentItem = content.find(item => item.id === contentId);
+  if (!contentItem) {
+    alert('Error: Contenido no encontrado');
+    return;
+  }
+  
+  // Verificar que el usuario es el propietario del contenido
+  if (contentItem.userId !== currentUser.id && contentItem.userId !== 'system') {
+    alert('Solo puedes editar tu propio contenido');
+    return;
+  }
+  
+  // Mostrar el modal de edición
+  showModal(editContentModal);
+  
+  // Seleccionar el tipo de contenido correcto
+  selectContentType(contentItem.type, 'edit');
+  
+  // Rellenar el formulario con los datos existentes
+  switch (contentItem.type) {
+    case 'video':
+      document.getElementById('editVideoId').value = contentItem.id;
+      document.getElementById('editVideoTitle').value = contentItem.title;
+      document.getElementById('editVideoDescription').value = contentItem.description;
+      document.getElementById('editVideoTags').value = contentItem.tags.join(', ');
+      break;
+      
+    case 'audio':
+      document.getElementById('editAudioId').value = contentItem.id;
+      document.getElementById('editAudioTitle').value = contentItem.title;
+      document.getElementById('editAudioDescription').value = contentItem.description;
+      document.getElementById('editAudioTags').value = contentItem.tags.join(', ');
+      break;
+      
+    case 'image':
+      document.getElementById('editImageId').value = contentItem.id;
+      document.getElementById('editImageTitle').value = contentItem.title;
+      document.getElementById('editImageDescription').value = contentItem.description;
+      document.getElementById('editImageTags').value = contentItem.tags.join(', ');
+      break;
+      
+    case 'phrase':
+      document.getElementById('editPhraseId').value = contentItem.id;
+      document.getElementById('editPhraseText').value = contentItem.text;
+      document.getElementById('editPhraseAuthor').value = contentItem.author;
+      document.getElementById('editPhraseContext').value = contentItem.context;
+      document.getElementById('editPhraseTags').value = contentItem.tags.join(', ');
+      break;
+  }
+}
+
+// Cargar y mostrar contenido
+function loadContent() {
+  // Limpiar grids
+  videosGrid.innerHTML = '';
+  audiosGrid.innerHTML = '';
+  imagesGrid.innerHTML = '';
+  phrasesGrid.innerHTML = '';
+  
+  // Ordenar contenido por fecha (más reciente primero)
+  const sortedContent = [...content].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+  sortedContent.forEach(item => {
+    switch (item.type) {
+      case 'video':
+        renderVideo(item);
+        break;
+      case 'audio':
+        renderAudio(item);
+        break;
+      case 'image':
+        renderImage(item);
+        break;
+      case 'phrase':
+        renderPhrase(item);
+        break;
+    }
+  });
+  
+  // Si no hay contenido, mostrar mensaje
+  if (videosGrid.innerHTML === '') {
+    videosGrid.innerHTML = '<p style="text-align:center;color:var(--muted);">No hay videos disponibles. ¡Sé el primero en agregar uno!</p>';
+  }
+  if (audiosGrid.innerHTML === '') {
+    audiosGrid.innerHTML = '<p style="text-align:center;color:var(--muted);">No hay audios disponibles. ¡Sé el primero en agregar uno!</p>';
+  }
+  if (imagesGrid.innerHTML === '') {
+    imagesGrid.innerHTML = '<p style="text-align:center;color:var(--muted);">No hay imágenes disponibles. ¡Sé el primero en agregar una!</p>';
+  }
+  if (phrasesGrid.innerHTML === '') {
+    phrasesGrid.innerHTML = '<p style="text-align:center;color:var(--muted);">No hay frases disponibles. ¡Sé el primero en agregar una!</p>';
+  }
+}
+
+// Renderizar video
+function renderVideo(item) {
+  const canEdit = currentUser && (item.userId === currentUser.id || item.userId === 'system');
+  
+  const videoHTML = `
+    <article class="content-item">
+      ${canEdit ? `
+        <div class="content-actions">
+          <button class="action-btn edit-btn" onclick="editContent('${item.id}')" title="Editar">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="action-btn delete-btn" onclick="deleteContent('${item.id}')" title="Eliminar">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      ` : ''}
+      <div class="media-box">
+        <video controls preload="metadata">
+          <source src="${item.url}" type="video/mp4">
+          Tu navegador no soporta video.
+        </video>
+      </div>
+      <aside class="meta">
+        <h3>${item.title}</h3>
+        <p class="desc">${item.description}</p>
+        <div class="tags">
+          ${item.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+        </div>
+        <div class="content-author">
+          <div class="author-avatar">${item.userName.charAt(0).toUpperCase()}</div>
+          <span class="author-name">Publicado por ${item.userName}</span>
+        </div>
+      </aside>
+    </article>
+  `;
+  videosGrid.insertAdjacentHTML('beforeend', videoHTML);
+}
+
+// Renderizar audio
+function renderAudio(item) {
+  const canEdit = currentUser && (item.userId === currentUser.id || item.userId === 'system');
+  
+  const audioHTML = `
+    <article class="content-item">
+      ${canEdit ? `
+        <div class="content-actions">
+          <button class="action-btn edit-btn" onclick="editContent('${item.id}')" title="Editar">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="action-btn delete-btn" onclick="deleteContent('${item.id}')" title="Eliminar">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      ` : ''}
+      <div class="media-box audio-box">
+        <audio controls preload="metadata">
+          <source src="${item.url}" type="audio/mpeg">
+          Tu navegador no soporta audio.
+        </audio>
+      </div>
+      <aside class="meta">
+        <h3>${item.title}</h3>
+        <p class="desc">${item.description}</p>
+        <div class="tags">
+          ${item.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+        </div>
+        <div class="content-author">
+          <div class="author-avatar">${item.userName.charAt(0).toUpperCase()}</div>
+          <span class="author-name">Publicado por ${item.userName}</span>
+        </div>
+      </aside>
+    </article>
+  `;
+  audiosGrid.insertAdjacentHTML('beforeend', audioHTML);
+}
+
+// Renderizar imagen
+function renderImage(item) {
+  const canEdit = currentUser && (item.userId === currentUser.id || item.userId === 'system');
+  
+  const imageHTML = `
+    <article class="content-item">
+      ${canEdit ? `
+        <div class="content-actions">
+          <button class="action-btn edit-btn" onclick="editContent('${item.id}')" title="Editar">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="action-btn delete-btn" onclick="deleteContent('${item.id}')" title="Eliminar">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      ` : ''}
+      <div class="media-box">
+        <img src="${item.url}" alt="${item.title}">
+      </div>
+      <aside class="meta">
+        <h3>${item.title}</h3>
+        <p class="desc">${item.description}</p>
+        <div class="tags">
+          ${item.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+        </div>
+        <div class="content-author">
+          <div class="author-avatar">${item.userName.charAt(0).toUpperCase()}</div>
+          <span class="author-name">Publicado por ${item.userName}</span>
+        </div>
+      </aside>
+    </article>
+  `;
+  imagesGrid.insertAdjacentHTML('beforeend', imageHTML);
+}
+
+// Renderizar frase
+function renderPhrase(item) {
+  const canEdit = currentUser && (item.userId === currentUser.id || item.userId === 'system');
+  
+  const phraseHTML = `
+    <article class="phrase-item">
+      ${canEdit ? `
+        <div class="content-actions">
+          <button class="action-btn edit-btn" onclick="editContent('${item.id}')" title="Editar">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="action-btn delete-btn" onclick="deleteContent('${item.id}')" title="Eliminar">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      ` : ''}
+      <div class="phrase-text">"${item.text}"</div>
+      <div>
+        <h3 class="phrase-author">${item.author}</h3>
+        <p class="phrase-context">${item.context}</p>
+        <div class="phrase-tags">
+          ${item.tags.map(tag => `<span class="phrase-tag">${tag}</span>`).join('')}
+        </div>
+        <div class="content-author" style="justify-content:center;margin-top:15px;">
+          <div class="author-avatar">${item.userName.charAt(0).toUpperCase()}</div>
+          <span class="author-name">Publicado por ${item.userName}</span>
+        </div>
+      </div>
+    </article>
+  `;
+  phrasesGrid.insertAdjacentHTML('beforeend', phraseHTML);
+}
+
+// ========== SCRIPT DEL CARRUSEL ==========
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar la aplicación
+  initApp();
+  
+  const slides = document.querySelectorAll('.carousel-slide');
+  const indicators = document.querySelectorAll('.carousel-indicator');
+  let currentSlide = 0;
+  const slideCount = slides.length;
+  let interval;
+  
+  function showSlide(index) {
+    slides.forEach(slide => slide.classList.remove('active'));
+    indicators.forEach(indicator => indicator.classList.remove('active'));
+    
+    slides[index].classList.add('active');
+    indicators[index].classList.add('active');
+    currentSlide = index;
+  }
+  
+  function nextSlide() {
+    let next = currentSlide + 1;
+    if (next >= slideCount) next = 0;
+    showSlide(next);
+  }
+  
+  indicators.forEach((indicator, index) => {
+    indicator.addEventListener('click', () => {
+      showSlide(index);
+    });
+  });
+  
+  // Iniciar carrusel
+  showSlide(0);
+  interval = setInterval(nextSlide, 5000);
+  
+  // Pausar al hacer hover
+  const carousel = document.querySelector('.hero-carousel');
+  if (carousel) {
+    carousel.addEventListener('mouseenter', () => {
+      clearInterval(interval);
+    });
+    
+    carousel.addEventListener('mouseleave', () => {
+      clearInterval(interval);
+      interval = setInterval(nextSlide, 5000);
+    });
+  }
+});
+
+/* Interactions: parallax, reveal on scroll, simple local notes */
+(function(){
+  // parallax effect on scroll
+  window.addEventListener('scroll', ()=>{
+    const sc = window.scrollY;
+    const hero = document.getElementById('hero');
+    if (hero) {
+      hero.style.transform = `translateY(${sc * -0.03}px)`;
+    }
+  }, {passive:true});
+
+  // IntersectionObserver reveal
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting) e.target.classList.add('show');
+    });
+  }, {threshold:0.12});
+
+  document.querySelectorAll('.reveal').forEach(el=>{
+    obs.observe(el);
+  });
+
+  // local notes (simple mural)
+  const notaInput = document.getElementById('nota');
+  const guardarBtn = document.getElementById('guardarNota');
+  const notasBox = document.getElementById('notasGuardadas');
+
+  function renderNotas(){
+    const items = JSON.parse(localStorage.getItem('legado_notas') || '[]');
+    notasBox.innerHTML = items.map(n => `<div style="background:#fff;padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.04)">${escapeHtml(n)}</div>`).join('');
+  }
+
+  guardarBtn.addEventListener('click', ()=>{
+    const text = (notaInput.value || '').trim();
+    if(!text) return alert('Escribe algo antes de guardar.');
+    const items = JSON.parse(localStorage.getItem('legado_notas') || '[]');
+    items.unshift(text);
+    localStorage.setItem('legado_notas', JSON.stringify(items.slice(0,50)));
+    notaInput.value = '';
+    renderNotas();
+  });
+
+  renderNotas();
+
+  // helper to avoid XSS in innerHTML for local demo
+  function escapeHtml(str){
+    return str.replace(/[&<>'"]/g, tag => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[tag]);
+  }
+
+  // keyboard hint: press "H" to focus hero (accessibility)
+  window.addEventListener('keydown',(e)=>{
+    if(e.key.toLowerCase()==='h'){ document.getElementById('hero').scrollIntoView({behavior:'smooth'}); }
+  });
+})();
+</script>
+</body>
+</html>

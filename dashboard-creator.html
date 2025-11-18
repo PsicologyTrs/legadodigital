@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Creador - LEGADO DIGITAL</title>
+    
+    <!-- Fuentes de Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Iconos -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <!-- BARRA DE NAVEGACIÓN -->
+    <nav class="top-nav">
+        <a href="index.html" class="nav-brand">LEGADO DIGITAL</a>
+        <div class="nav-user">
+            <div id="userInfo" class="user-info">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <span id="userName">Usuario</span>
+                <button class="btn btn-login" id="logoutBtn">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="dashboard-container">
+        <!-- ENCABEZADO DEL DASHBOARD -->
+        <header class="dashboard-header">
+            <div class="welcome-section">
+                <h1>Panel del Creador</h1>
+                <p>Gestiona tu contenido y comparte tu patrimonio cultural</p>
+            </div>
+            <div class="creator-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalContent">0</div>
+                    <div class="stat-label">Contenidos Subidos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalVideos">0</div>
+                    <div class="stat-label">Videos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalAudios">0</div>
+                    <div class="stat-label">Audios</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalImages">0</div>
+                    <div class="stat-label">Imágenes</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- SECCIÓN DE ACCIONES RÁPIDAS -->
+        <section class="quick-actions">
+            <h2>Acciones Rápidas</h2>
+            <div class="actions-grid">
+                <button class="action-btn" id="addVideoBtn">
+                    <i class="fas fa-video"></i>
+                    <span>Agregar Video</span>
+                </button>
+                <button class="action-btn" id="addAudioBtn">
+                    <i class="fas fa-music"></i>
+                    <span>Agregar Audio</span>
+                </button>
+                <button class="action-btn" id="addImageBtn">
+                    <i class="fas fa-image"></i>
+                    <span>Agregar Imagen</span>
+                </button>
+                <button class="action-btn" id="addPhraseBtn">
+                    <i class="fas fa-quote-left"></i>
+                    <span>Agregar Frase</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- SECCIÓN DE CONTENIDO -->
+        <section class="content-section">
+            <div class="section-header">
+                <h2>Mi Contenido</h2>
+                <div class="section-actions">
+                    <select id="contentFilter" class="form-control">
+                        <option value="all">Todo el contenido</option>
+                        <option value="video">Videos</option>
+                        <option value="audio">Audios</option>
+                        <option value="image">Imágenes</option>
+                        <option value="phrase">Frases</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="content-grid" id="contentGrid">
+                <!-- El contenido se cargará aquí dinámicamente -->
+            </div>
+        </section>
+    </div>
+
+    <!-- MODAL PARA AGREGAR CONTENIDO -->
+    <div class="modal" id="contentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Agregar Contenido</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="contentForm">
+                <input type="hidden" id="contentId">
+                <input type="hidden" id="contentType">
+                
+                <div class="form-group">
+                    <label for="contentTitle">Título</label>
+                    <input type="text" id="contentTitle" class="form-control" required>
+                </div>
+
+                <div class="form-group" id="fileInputGroup">
+                    <label for="contentFile">Archivo</label>
+                    <div class="file-input-container">
+                        <input type="file" id="contentFile" class="file-input">
+                        <label for="contentFile" class="file-input-label" id="fileInputLabel">
+                            <i class="fas fa-upload"></i><br>
+                            <span>Seleccionar archivo</span>
+                            <div class="file-name" id="fileName"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="contentDescription">Descripción</label>
+                    <textarea id="contentDescription" class="form-control" rows="3" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="contentTags">Etiquetas (separadas por comas)</label>
+                    <input type="text" id="contentTags" class="form-control" placeholder="patrimonio, cultura, historia">
+                </div>
+
+                <div class="form-group" id="phraseFields" style="display: none;">
+                    <label for="contentAuthor">Autor</label>
+                    <input type="text" id="contentAuthor" class="form-control">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelContent">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Contenido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        © 2025 Legado Digital · Proyecto Historia y Patrimonio · Universidad del Magdalena · Contacto: mjcdiaz@unimagdalena.edu
+    </footer>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pago para Creadores - LEGADO DIGITAL</title>
+    
+    <!-- Fuentes de Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Iconos -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/payment.css">
+</head>
+<body>
+    <!-- BARRA DE NAVEGACIÓN -->
+    <nav class="top-nav">
+        <a href="index.html" class="nav-brand">LEGADO DIGITAL</a>
+        <div class="nav-user">
+            <div id="userInfo" class="user-info">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <span id="userName">Usuario</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="payment-container">
+        <!-- ENCABEZADO -->
+        <div class="payment-header">
+            <h1 class="payment-title">Conviértete en Creador Verificado</h1>
+            <p class="payment-subtitle">
+                Únete a nuestra comunidad de creadores y comparte tu patrimonio cultural con el mundo. 
+                Accede a herramientas exclusivas para subir videos, imágenes, audios y frases.
+            </p>
+            <div class="payment-amount">$15,000 COP</div>
+            <p>Pago único • Acceso de por vida</p>
+        </div>
+
+        <!-- TARJETA DE PAGO -->
+        <div class="payment-card">
+            <div class="card-header">
+                <h2 class="card-title">Cuota de Creador</h2>
+                <div class="card-badge">Recomendado</div>
+            </div>
+
+            <!-- BENEFICIOS -->
+            <div class="benefits-grid">
+                <div class="benefit-item">
+                    <div class="benefit-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <div>
+                        <h4>Videos Ilimitados</h4>
+                        <p>Sube todo tu contenido audiovisual</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <div>
+                        <h4>Galería de Imágenes</h4>
+                        <p>Comparte fotografías del patrimonio</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div>
+                        <h4>Audio y Podcasts</h4>
+                        <p>Distribuye tus relatos sonoros</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">
+                        <i class="fas fa-quote-left"></i>
+                    </div>
+                    <div>
+                        <h4>Frases y Poesía</h4>
+                        <p>Comparte literatura y reflexiones</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÉTODOS DE PAGO -->
+            <div class="payment-methods">
+                <h3 class="methods-title">Selecciona tu método de pago</h3>
+                <div class="methods-grid">
+                    <div class="method-card active" data-method="pse">
+                        <div class="method-icon">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <div class="method-name">PSE</div>
+                        <div class="method-desc">Pago en línea bancario</div>
+                    </div>
+                    <div class="method-card" data-method="card">
+                        <div class="method-icon">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="method-name">Tarjeta</div>
+                        <div class="method-desc">Crédito/Débito</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FORMULARIO DE PAGO PSE -->
+            <form id="paymentForm" class="payment-form">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-user"></i>
+                        Información Personal
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="fullName">Nombre Completo</label>
+                            <input type="text" id="fullName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Correo Electrónico</label>
+                            <input type="email" id="email" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="documentType">Tipo de Documento</label>
+                            <select id="documentType" class="form-control" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="cc">Cédula de Ciudadanía</option>
+                                <option value="ce">Cédula de Extranjería</option>
+                                <option value="passport">Pasaporte</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="document">Número de Documento</label>
+                            <input type="text" id="document" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INFORMACIÓN BANCARIA PSE -->
+                <div class="form-section" id="pseSection">
+                    <h3 class="section-title">
+                        <i class="fas fa-university"></i>
+                        Información Bancaria PSE
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="bank">Banco</label>
+                            <select id="bank" class="form-control" required>
+                                <option value="">Seleccionar banco...</option>
+                                <option value="bancolombia">Bancolombia</option>
+                                <option value="davivienda">Davivienda</option>
+                                <option value="bbva">BBVA</option>
+                                <option value="bogota">Banco de Bogotá</option>
+                                <option value="popular">Banco Popular</option>
+                                <option value="avvillas">AV Villas</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="accountType">Tipo de Cuenta</label>
+                            <select id="accountType" class="form-control" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="savings">Cuenta de Ahorros</option>
+                                <option value="checking">Cuenta Corriente</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TÉRMINOS Y CONDICIONES -->
+                <div class="form-group terms-group">
+                    <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="acceptTerms" required style="margin-top: 3px;">
+                        <span>
+                            Acepto los <a href="#" style="color: var(--accent);">Términos y Condiciones</a> 
+                            y la <a href="#" style="color: var(--accent);">Política de Privacidad</a>. 
+                            Entiendo que este es un pago único de $15,000 COP por acceso vitalicio como creador.
+                        </span>
+                    </label>
+                </div>
+
+                <!-- MENSAJES -->
+                <div id="paymentMessage" class="message" style="display: none;"></div>
+
+                <!-- BOTONES DE ACCIÓN -->
+                <div class="action-buttons">
+                    <a href="index.html" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="payButton">
+                        <i class="fas fa-lock"></i>
+                        Pagar $15,000 COP
+                    </button>
+                </div>
+            </form>
+
+            <!-- INFORMACIÓN DE SEGURIDAD -->
+            <div class="security-info">
+                <i class="fas fa-shield-alt"></i>
+                <span>Pago 100% seguro y encriptado. Tus datos están protegidos.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        © 2025 Legado Digital · Proyecto Historia y Patrimonio · Universidad del Magdalena · Contacto: mjcdiaz@unimagdalena.edu
+    </footer>
+
+    <script src="js/payment.js"></script>
+</body>
+</html>

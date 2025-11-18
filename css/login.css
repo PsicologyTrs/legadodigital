@@ -1,0 +1,116 @@
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, rgba(244,239,230,0.8), rgba(239,234,225,0.9));
+}
+
+.login-card {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 450px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-title {
+    font-family: "Uncial Antiqua", cursive;
+    font-size: 32px;
+    color: var(--forest);
+    margin-bottom: 10px;
+}
+
+.login-subtitle {
+    color: var(--muted);
+    font-size: 16px;
+}
+
+.login-form {
+    margin-bottom: 20px;
+}
+
+.user-type-group {
+    margin: 25px 0;
+}
+
+.user-type-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.user-type-option input[type="radio"] {
+    display: none;
+}
+
+.user-type-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    gap: 8px;
+}
+
+.user-type-option input[type="radio"]:checked + label {
+    border-color: var(--accent);
+    background: rgba(184,134,59,0.05);
+    color: var(--forest);
+}
+
+.user-type-option label i {
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.login-footer {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.login-footer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 30px 20px;
+    }
+    
+    .user-type-selector {
+        grid-template-columns: 1fr;
+    }
+    
+    .login-title {
+        font-size: 28px;
+    }
+}
