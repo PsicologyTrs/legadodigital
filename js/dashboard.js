@@ -1,29 +1,54 @@
 // Dashboard del Creador - dashboard.js
+'use strict';
 
-// Elementos del DOM
+// ====================== ELEMENTOS DEL DOM ======================
+
 const userInfo = document.getElementById('userInfo');
 const userName = document.getElementById('userName');
 const userAvatar = document.getElementById('userAvatar');
 const logoutBtn = document.getElementById('logoutBtn');
+
 const contentGrid = document.getElementById('contentGrid');
 const contentFilter = document.getElementById('contentFilter');
+
 const addVideoBtn = document.getElementById('addVideoBtn');
 const addAudioBtn = document.getElementById('addAudioBtn');
 const addImageBtn = document.getElementById('addImageBtn');
 const addPhraseBtn = document.getElementById('addPhraseBtn');
+
 const contentModal = document.getElementById('contentModal');
 const contentForm = document.getElementById('contentForm');
 const cancelContent = document.getElementById('cancelContent');
 const closeModal = document.querySelector('.close-modal');
 
-// Variables de estado
+// Campos del formulario de contenido
+const contentTypeInput = document.getElementById('contentType');
+const contentTitleInput = document.getElementById('contentTitle');
+const contentDescriptionInput = document.getElementById('contentDescription');
+const contentTagsInput = document.getElementById('contentTags');
+const contentAuthorInput = document.getElementById('contentAuthor');
+const contentFileInput = document.getElementById('contentFile');
+const fileInputLabel = document.getElementById('fileInputLabel');
+const fileNameSpan = document.getElementById('fileName');
+const phraseFields = document.getElementById('phraseFields');
+const fileInputGroup = document.getElementById('fileInputGroup');
+const modalTitle = document.getElementById('modalTitle');
+
+// ====================== ESTADO ======================
+
 let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null;
 let userContent = JSON.parse(localStorage.getItem('legado_content')) || [];
 let currentEditingId = null;
 
-// Inicializar el dashboard
+// ====================== INICIALIZACIÓN ======================
+
 function initDashboard() {
-    if (!currentUser || !currentUser.isCreator || !currentUser.hasPaid) {
+    const isCreatorUser =
+        currentUser &&
+        (currentUser.type === 'creator' || currentUser.isCreator === true) &&
+        currentUser.hasPaid;
+
+    if (!isCreatorUser) {
         // Si no es un creador verificado, redirigir al login
         window.location.href = 'login.html';
         return;
@@ -35,62 +60,77 @@ function initDashboard() {
     updateStats();
 }
 
-// Actualizar información del usuario
+// ====================== UI USUARIO ======================
+
 function updateUserInfo() {
-    if (currentUser) {
-        userName.textContent = currentUser.name;
-        userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+    if (!currentUser) return;
+    if (userName) userName.textContent = currentUser.name;
+    if (userAvatar) userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+}
+
+// ====================== EVENT LISTENERS ======================
+
+function setupEventListeners() {
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+    }
+
+    if (contentFilter) {
+        contentFilter.addEventListener('change', filterContent);
+    }
+
+    if (addVideoBtn) addVideoBtn.addEventListener('click', () => showContentModal('video'));
+    if (addAudioBtn) addAudioBtn.addEventListener('click', () => showContentModal('audio'));
+    if (addImageBtn) addImageBtn.addEventListener('click', () => showContentModal('image'));
+    if (addPhraseBtn) addPhraseBtn.addEventListener('click', () => showContentModal('phrase'));
+
+    if (cancelContent) cancelContent.addEventListener('click', hideContentModal);
+    if (closeModal) closeModal.addEventListener('click', hideContentModal);
+
+    if (contentModal) {
+        contentModal.addEventListener('click', (e) => {
+            if (e.target === contentModal) hideContentModal();
+        });
+    }
+
+    if (contentForm) {
+        contentForm.addEventListener('submit', handleContentSubmit);
+    }
+
+    if (contentFileInput) {
+        contentFileInput.addEventListener('change', handleFileSelect);
     }
 }
 
-// Configurar event listeners
-function setupEventListeners() {
-    logoutBtn.addEventListener('click', handleLogout);
-    contentFilter.addEventListener('change', filterContent);
-    
-    // Botones de agregar contenido
-    addVideoBtn.addEventListener('click', () => showContentModal('video'));
-    addAudioBtn.addEventListener('click', () => showContentModal('audio'));
-    addImageBtn.addEventListener('click', () => showContentModal('image'));
-    addPhraseBtn.addEventListener('click', () => showContentModal('phrase'));
-    
-    // Modal
-    cancelContent.addEventListener('click', hideContentModal);
-    closeModal.addEventListener('click', hideContentModal);
-    contentModal.addEventListener('click', (e) => {
-        if (e.target === contentModal) hideContentModal();
-    });
-    
-    // Formulario
-    contentForm.addEventListener('submit', handleContentSubmit);
-    
-    // Input de archivo
-    document.getElementById('contentFile').addEventListener('change', handleFileSelect);
-}
+// ====================== CARGA Y FILTRO DE CONTENIDO ======================
 
-// Cargar contenido del usuario
 function loadUserContent() {
-    const userContentItems = userContent.filter(item => item.userId === currentUser.id);
+    if (!currentUser) return;
+    const userContentItems = userContent.filter((item) => item.userId === currentUser.id);
     displayContent(userContentItems);
 }
 
-// Filtrar contenido
 function filterContent() {
+    if (!currentUser || !contentFilter) return;
+
     const filter = contentFilter.value;
-    let filteredContent = userContent.filter(item => item.userId === currentUser.id);
-    
+    let filteredContent = userContent.filter((item) => item.userId === currentUser.id);
+
     if (filter !== 'all') {
-        filteredContent = filteredContent.filter(item => item.type === filter);
+        filteredContent = filteredContent.filter((item) => item.type === filter);
     }
-    
+
     displayContent(filteredContent);
 }
 
-// Mostrar contenido en la grid
+// ====================== RENDERIZADO DE CONTENIDO ======================
+
 function displayContent(contentItems) {
+    if (!contentGrid) return;
+
     contentGrid.innerHTML = '';
-    
-    if (contentItems.length === 0) {
+
+    if (!contentItems || contentItems.length === 0) {
         contentGrid.innerHTML = `
             <div class="no-content">
                 <i class="fas fa-inbox" style="font-size: 48px; color: var(--muted); margin-bottom: 15px;"></i>
@@ -100,21 +140,23 @@ function displayContent(contentItems) {
         `;
         return;
     }
-    
-    contentItems.forEach(item => {
+
+    contentItems.forEach((item) => {
         const contentCard = createContentCard(item);
         contentGrid.appendChild(contentCard);
     });
 }
 
-// Crear tarjeta de contenido
 function createContentCard(item) {
     const card = document.createElement('div');
     card.className = 'content-card';
-    
+
     let mediaHTML = '';
-    let description = item.description.length > 100 ? item.description.substring(0, 100) + '...' : item.description;
-    
+    const description =
+        item.description && item.description.length > 100
+            ? `${item.description.substring(0, 100)}...`
+            : item.description || '';
+
     switch (item.type) {
         case 'video':
             mediaHTML = `
@@ -147,15 +189,22 @@ function createContentCard(item) {
                 </div>
             `;
             break;
+        default:
+            mediaHTML = '';
+            break;
     }
-    
+
+    const tagsHTML = (item.tags || [])
+        .map((tag) => `<span class="content-tag">${tag}</span>`)
+        .join('');
+
     card.innerHTML = `
         ${mediaHTML}
         <div class="content-info">
-            <div class="content-title">${item.title}</div>
-            <div class="content-description">${description}</div>
+            <div class="content-title">${item.title || ''}</div>
+            <div class="content-description">${description || ''}</div>
             <div class="content-tags">
-                ${item.tags.map(tag => `<span class="content-tag">${tag}</span>`).join('')}
+                ${tagsHTML}
             </div>
             <div class="content-actions">
                 <button class="content-action-btn btn-edit" onclick="editContent('${item.id}')">
@@ -167,221 +216,244 @@ function createContentCard(item) {
             </div>
         </div>
     `;
-    
+
     return card;
 }
 
-// Actualizar estadísticas
+// ====================== ESTADÍSTICAS ======================
+
 function updateStats() {
-    const userContentItems = userContent.filter(item => item.userId === currentUser.id);
-    
-    document.getElementById('totalContent').textContent = userContentItems.length;
-    document.getElementById('totalVideos').textContent = userContentItems.filter(item => item.type === 'video').length;
-    document.getElementById('totalAudios').textContent = userContentItems.filter(item => item.type === 'audio').length;
-    document.getElementById('totalImages').textContent = userContentItems.filter(item => item.type === 'image').length;
+    if (!currentUser) return;
+
+    const userContentItems = userContent.filter((item) => item.userId === currentUser.id);
+
+    const totalContentEl = document.getElementById('totalContent');
+    const totalVideosEl = document.getElementById('totalVideos');
+    const totalAudiosEl = document.getElementById('totalAudios');
+    const totalImagesEl = document.getElementById('totalImages');
+
+    if (totalContentEl) totalContentEl.textContent = userContentItems.length;
+    if (totalVideosEl) totalVideosEl.textContent = userContentItems.filter((i) => i.type === 'video').length;
+    if (totalAudiosEl) totalAudiosEl.textContent = userContentItems.filter((i) => i.type === 'audio').length;
+    if (totalImagesEl) totalImagesEl.textContent = userContentItems.filter((i) => i.type === 'image').length;
 }
 
-// Mostrar modal de contenido
+// ====================== MODAL DE CONTENIDO ======================
+
 function showContentModal(type, contentId = null) {
     currentEditingId = contentId;
-    
-    // Configurar el modal según el tipo
-    document.getElementById('contentType').value = type;
-    document.getElementById('modalTitle').textContent = contentId ? 'Editar Contenido' : `Agregar ${type.charAt(0).toUpperCase() + type.slice(1)}`;
-    
-    // Mostrar/ocultar campos según el tipo
-    const fileInputGroup = document.getElementById('fileInputGroup');
-    const phraseFields = document.getElementById('phraseFields');
-    
-    if (type === 'phrase') {
-        fileInputGroup.style.display = 'none';
-        phraseFields.style.display = 'block';
-    } else {
-        fileInputGroup.style.display = 'block';
-        phraseFields.style.display = 'none';
-        
-        // Actualizar el label del archivo
-        const fileInputLabel = document.getElementById('fileInputLabel');
-        const accept = type === 'video' ? 'video/mp4' : type === 'audio' ? 'audio/mpeg' : 'image/*';
-        const text = type === 'video' ? 'Seleccionar video MP4' : type === 'audio' ? 'Seleccionar audio MP3' : 'Seleccionar imagen';
-        
-        document.getElementById('contentFile').setAttribute('accept', accept);
-        fileInputLabel.querySelector('span').textContent = text;
+
+    if (contentTypeInput) contentTypeInput.value = type;
+    if (modalTitle) {
+        modalTitle.textContent = contentId
+            ? 'Editar Contenido'
+            : `Agregar ${type.charAt(0).toUpperCase() + type.slice(1)}`;
     }
-    
-    // Si estamos editando, cargar los datos
+
+    if (type === 'phrase') {
+        if (fileInputGroup) fileInputGroup.style.display = 'none';
+        if (phraseFields) phraseFields.style.display = 'block';
+    } else {
+        if (fileInputGroup) fileInputGroup.style.display = 'block';
+        if (phraseFields) phraseFields.style.display = 'none';
+
+        const accept =
+            type === 'video' ? 'video/mp4' :
+            type === 'audio' ? 'audio/mpeg' :
+            'image/*';
+
+        const labelText =
+            type === 'video' ? 'Seleccionar video MP4' :
+            type === 'audio' ? 'Seleccionar audio MP3' :
+            'Seleccionar imagen';
+
+        if (contentFileInput) contentFileInput.setAttribute('accept', accept);
+        if (fileInputLabel) {
+            const span = fileInputLabel.querySelector('span');
+            if (span) span.textContent = labelText;
+        }
+    }
+
+    // Cargar datos si estamos editando
     if (contentId) {
-        const content = userContent.find(item => item.id === contentId);
-        if (content) {
-            document.getElementById('contentTitle').value = content.title;
-            document.getElementById('contentDescription').value = content.description;
-            document.getElementById('contentTags').value = content.tags.join(', ');
-            
-            if (type === 'phrase') {
-                document.getElementById('contentAuthor').value = content.author || '';
+        const item = userContent.find((c) => c.id === contentId);
+        if (item) {
+            if (contentTitleInput) contentTitleInput.value = item.title || '';
+            if (contentDescriptionInput) contentDescriptionInput.value = item.description || '';
+            if (contentTagsInput) contentTagsInput.value = (item.tags || []).join(', ');
+
+            if (type === 'phrase' && contentAuthorInput) {
+                contentAuthorInput.value = item.author || '';
             }
         }
     } else {
-        // Limpiar el formulario
-        contentForm.reset();
-        document.getElementById('fileName').textContent = '';
-        document.getElementById('fileInputLabel').classList.remove('has-file');
+        // Limpiar formulario
+        if (contentForm) contentForm.reset();
+        if (fileNameSpan) fileNameSpan.textContent = '';
+        if (fileInputLabel) fileInputLabel.classList.remove('has-file');
     }
-    
-    contentModal.classList.add('active');
+
+    if (contentModal) contentModal.classList.add('active');
 }
 
-// Ocultar modal de contenido
 function hideContentModal() {
-    contentModal.classList.remove('active');
+    if (contentModal) contentModal.classList.remove('active');
     currentEditingId = null;
 }
 
-// Manejar selección de archivo
 function handleFileSelect(e) {
     const file = e.target.files[0];
-    const fileName = document.getElementById('fileName');
-    const fileInputLabel = document.getElementById('fileInputLabel');
-    
-    if (file) {
-        fileName.textContent = file.name;
-        fileInputLabel.classList.add('has-file');
-    } else {
-        fileName.textContent = '';
-        fileInputLabel.classList.remove('has-file');
+
+    if (fileNameSpan) {
+        fileNameSpan.textContent = file ? file.name : '';
+    }
+
+    if (fileInputLabel) {
+        if (file) {
+            fileInputLabel.classList.add('has-file');
+        } else {
+            fileInputLabel.classList.remove('has-file');
+        }
     }
 }
 
-// Manejar envío del formulario de contenido
+// ====================== CREAR / ACTUALIZAR CONTENIDO ======================
+
 function handleContentSubmit(e) {
     e.preventDefault();
-    
-    const type = document.getElementById('contentType').value;
-    const title = document.getElementById('contentTitle').value;
-    const description = document.getElementById('contentDescription').value;
-    const tags = document.getElementById('contentTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
-    const file = document.getElementById('contentFile').files[0];
-    
+
+    const type = contentTypeInput?.value;
+    const title = contentTitleInput?.value.trim();
+    const description = contentDescriptionInput?.value.trim();
+    const tags = (contentTagsInput?.value || '')
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t);
+    const file = contentFileInput?.files[0];
+
     if (!title || !description) {
         alert('Por favor completa todos los campos obligatorios');
         return;
     }
-    
+
     if (type !== 'phrase' && !file && !currentEditingId) {
         alert('Por favor selecciona un archivo');
         return;
     }
-    
-    let contentData = {
+
+    const contentData = {
         title,
         description,
         tags,
-        type
+        type,
     };
-    
+
     if (type === 'phrase') {
-        const author = document.getElementById('contentAuthor').value;
+        const author = contentAuthorInput?.value.trim();
         if (!author) {
             alert('Por favor ingresa el autor de la frase');
             return;
         }
         contentData.author = author;
-        contentData.text = description; // Para frases, el texto es la descripción
+        contentData.text = description;
     }
-    
+
     if (currentEditingId) {
-        // Editar contenido existente
         updateContent(currentEditingId, contentData, file);
     } else {
-        // Crear nuevo contenido
         createContent(contentData, file);
     }
 }
 
-// Crear nuevo contenido
 function createContent(contentData, file) {
     let url = '';
-    
+
     if (file) {
-        // En un entorno real, aquí subirías el archivo a un servidor
-        // Por ahora, usamos una URL local
+        // En un entorno real subirías el archivo a un servidor
         url = URL.createObjectURL(file);
     }
-    
+
     const newContent = {
         id: Date.now().toString(),
         ...contentData,
         url,
         userId: currentUser.id,
         userName: currentUser.name,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
     };
-    
+
     userContent.push(newContent);
     localStorage.setItem('legado_content', JSON.stringify(userContent));
-    
+
     hideContentModal();
     loadUserContent();
     updateStats();
-    
+
     alert('¡Contenido agregado exitosamente!');
 }
 
-// Actualizar contenido existente
 function updateContent(contentId, contentData, file) {
-    const contentIndex = userContent.findIndex(item => item.id === contentId);
-    
-    if (contentIndex !== -1) {
-        let url = userContent[contentIndex].url;
-        
-        if (file) {
-            // En un entorno real, aquí subirías el nuevo archivo
-            url = URL.createObjectURL(file);
-        }
-        
-        userContent[contentIndex] = {
-            ...userContent[contentIndex],
-            ...contentData,
-            url,
-            updatedAt: new Date().toISOString()
-        };
-        
-        localStorage.setItem('legado_content', JSON.stringify(userContent));
-        
-        hideContentModal();
-        loadUserContent();
-        updateStats();
-        
-        alert('¡Contenido actualizado exitosamente!');
+    const index = userContent.findIndex((item) => item.id === contentId);
+    if (index === -1) return;
+
+    let url = userContent[index].url;
+
+    if (file) {
+        url = URL.createObjectURL(file);
     }
+
+    userContent[index] = {
+        ...userContent[index],
+        ...contentData,
+        url,
+        updatedAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem('legado_content', JSON.stringify(userContent));
+
+    hideContentModal();
+    loadUserContent();
+    updateStats();
+
+    alert('¡Contenido actualizado exitosamente!');
 }
 
-// Editar contenido
+// ====================== EDITAR / ELIMINAR (GLOBALES PARA onclick) ======================
+
 function editContent(contentId) {
-    const content = userContent.find(item => item.id === contentId);
-    if (content) {
-        showContentModal(content.type, contentId);
+    const item = userContent.find((c) => c.id === contentId);
+    if (!item) {
+        alert('Contenido no encontrado');
+        return;
     }
+    showContentModal(item.type, contentId);
 }
 
-// Eliminar contenido
 function deleteContent(contentId) {
-    if (confirm('¿Estás seguro de que quieres eliminar este contenido? Esta acción no se puede deshacer.')) {
-        userContent = userContent.filter(item => item.id !== contentId);
-        localStorage.setItem('legado_content', JSON.stringify(userContent));
-        
-        loadUserContent();
-        updateStats();
-        
-        alert('¡Contenido eliminado exitosamente!');
+    if (!confirm('¿Estás seguro de que quieres eliminar este contenido? Esta acción no se puede deshacer.')) {
+        return;
     }
+
+    userContent = userContent.filter((item) => item.id !== contentId);
+    localStorage.setItem('legado_content', JSON.stringify(userContent));
+
+    loadUserContent();
+    updateStats();
+
+    alert('¡Contenido eliminado exitosamente!');
 }
 
-// Cerrar sesión
+// Hacerlas accesibles desde HTML inline
+window.editContent = editContent;
+window.deleteContent = deleteContent;
+
+// ====================== LOGOUT ======================
+
 function handleLogout() {
     localStorage.removeItem('legado_currentUser');
     window.location.href = 'index.html';
 }
 
-// Inicializar cuando el DOM esté listo
+// ====================== ARRANQUE ======================
+
 document.addEventListener('DOMContentLoaded', initDashboard);

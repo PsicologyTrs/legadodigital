@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - LEGADO DIGITAL</title>
-    
+
     <!-- Fuentes de Google -->
     <link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <!-- Iconos -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+
+    <!-- Tus estilos -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/login.css">
 </head>
@@ -27,6 +28,7 @@
 
     <!-- CONTENIDO PRINCIPAL -->
     <div class="login-container">
+        <!-- CARD LOGIN -->
         <div class="login-card">
             <div class="login-header">
                 <h1 class="login-title">Iniciar Sesión</h1>
@@ -38,7 +40,7 @@
                     <label for="loginEmail">Correo Electrónico</label>
                     <input type="email" id="loginEmail" class="form-control" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="loginPassword">Contraseña</label>
                     <input type="password" id="loginPassword" class="form-control" required>
@@ -48,14 +50,25 @@
                     <label>Tipo de Usuario</label>
                     <div class="user-type-selector">
                         <div class="user-type-option">
-                            <input type="radio" id="userTypeConsumer" name="userType" value="consumer" checked>
+                            <input
+                                type="radio"
+                                id="userTypeConsumer"
+                                name="userType"
+                                value="consumer"
+                                checked
+                            >
                             <label for="userTypeConsumer">
                                 <i class="fas fa-user"></i>
                                 Consumidor
                             </label>
                         </div>
                         <div class="user-type-option">
-                            <input type="radio" id="userTypeCreator" name="userType" value="creator">
+                            <input
+                                type="radio"
+                                id="userTypeCreator"
+                                name="userType"
+                                value="creator"
+                            >
                             <label for="userTypeCreator">
                                 <i class="fas fa-palette"></i>
                                 Creador
@@ -77,7 +90,7 @@
             </div>
         </div>
 
-        <!-- FORMULARIO DE REGISTRO (oculto inicialmente) -->
+        <!-- CARD REGISTRO -->
         <div class="login-card register-card" id="registerCard" style="display: none;">
             <div class="login-header">
                 <h1 class="login-title">Registrarse</h1>
@@ -89,12 +102,12 @@
                     <label for="registerName">Nombre Completo</label>
                     <input type="text" id="registerName" class="form-control" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="registerEmail">Correo Electrónico</label>
                     <input type="email" id="registerEmail" class="form-control" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="registerPassword">Contraseña</label>
                     <input type="password" id="registerPassword" class="form-control" required>
@@ -104,14 +117,25 @@
                     <label>Tipo de Usuario</label>
                     <div class="user-type-selector">
                         <div class="user-type-option">
-                            <input type="radio" id="registerTypeConsumer" name="registerUserType" value="consumer" checked>
+                            <input
+                                type="radio"
+                                id="registerTypeConsumer"
+                                name="registerUserType"
+                                value="consumer"
+                                checked
+                            >
                             <label for="registerTypeConsumer">
                                 <i class="fas fa-user"></i>
                                 Consumidor
                             </label>
                         </div>
                         <div class="user-type-option">
-                            <input type="radio" id="registerTypeCreator" name="registerUserType" value="creator">
+                            <input
+                                type="radio"
+                                id="registerTypeCreator"
+                                name="registerUserType"
+                                value="creator"
+                            >
                             <label for="registerTypeCreator">
                                 <i class="fas fa-palette"></i>
                                 Creador

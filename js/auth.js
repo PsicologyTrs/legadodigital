@@ -1,6 +1,9 @@
 // Sistema de Autenticación - auth.js
+'use strict';
 
-// Datos iniciales (simulando base de datos)
+// ====================== ESTADO Y ELEMENTOS ======================
+
+// "Base de datos" simulada en localStorage
 let users = JSON.parse(localStorage.getItem('legado_users')) || [];
 let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null;
 
@@ -11,10 +14,53 @@ const loginMessage = document.getElementById('loginMessage');
 const registerMessage = document.getElementById('registerMessage');
 const showRegister = document.getElementById('showRegister');
 const showLogin = document.getElementById('showLogin');
-const loginCard = document.querySelector('.login-card');
+const loginCard = document.querySelector('.login-card'); // primer card (login)
 const registerCard = document.getElementById('registerCard');
 
-// Inicializar la aplicación
+// ====================== HELPERS ======================
+
+// Normalizar el tipo de usuario para compatibilidad con index.html
+function getUserType(user) {
+    if (!user) return null;
+    if (user.type === 'creator' || user.type === 'consumer') return user.type;
+    // Fallback para usuarios creados desde index.html
+    if (user.isCreator) return 'creator';
+    return 'consumer';
+}
+
+// Mostrar mensajes bonitos
+function showMessage(element, text, type = 'info') {
+    if (!element) return;
+    element.textContent = text;
+    element.className = `message ${type}`;
+    element.style.display = 'block';
+
+    // Ocultar después de 5 segundos
+    setTimeout(() => {
+        element.style.display = 'none';
+    }, 5000);
+}
+
+// Redirigir según tipo de usuario y estado de pago
+function redirectAfterLogin() {
+    if (!currentUser) return;
+
+    const role = getUserType(currentUser);
+
+    if (role === 'creator' && !currentUser.hasPaid) {
+        // Creador que no ha pagado -> ir a página de pago
+        window.location.href = 'payment.html';
+    } else if (role === 'creator' && currentUser.hasPaid) {
+        // Creador verificado -> dashboard
+        window.location.href = 'dashboard-creator.html';
+    } else {
+        // Consumidor -> página principal
+        window.location.href = 'index.html';
+    }
+}
+
+// ====================== INICIALIZACIÓN ======================
+
 function initAuth() {
     setupEventListeners();
     checkExistingSession();
@@ -25,18 +71,18 @@ function setupEventListeners() {
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
     }
-    
+
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
     }
-    
+
     if (showRegister) {
         showRegister.addEventListener('click', (e) => {
             e.preventDefault();
             showRegisterForm();
         });
     }
-    
+
     if (showLogin) {
         showLogin.addEventListener('click', (e) => {
             e.preventDefault();
@@ -53,25 +99,26 @@ function checkExistingSession() {
     }
 }
 
-// Mostrar formulario de registro
+// ====================== UI: MOSTRAR FORMULARIOS ======================
+
 function showRegisterForm() {
-    loginCard.style.display = 'none';
-    registerCard.style.display = 'block';
+    if (loginCard) loginCard.style.display = 'none';
+    if (registerCard) registerCard.style.display = 'block';
 }
 
-// Mostrar formulario de login
 function showLoginForm() {
-    registerCard.style.display = 'none';
-    loginCard.style.display = 'block';
+    if (registerCard) registerCard.style.display = 'none';
+    if (loginCard) loginCard.style.display = 'block';
 }
 
-// Manejar inicio de sesión
+// ====================== HANDLERS: LOGIN / REGISTRO ======================
+
 function handleLogin(e) {
     e.preventDefault();
-    
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const userType = document.querySelector('input[name="userType"]:checked').value;
+
+    const email = document.getElementById('loginEmail')?.value.trim();
+    const password = document.getElementById('loginPassword')?.value;
+    const userType = document.querySelector('input[name="userType"]:checked')?.value;
 
     // Validar campos
     if (!email || !password) {
@@ -80,39 +127,43 @@ function handleLogin(e) {
     }
 
     // Buscar usuario
-    const user = users.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-        // Verificar tipo de usuario
-        if (user.type !== userType) {
-            showMessage(loginMessage, `Este correo está registrado como ${user.type === 'creator' ? 'creador' : 'consumidor'}`, 'error');
-            return;
-        }
-        
-        // Iniciar sesión
-        currentUser = user;
-        localStorage.setItem('legado_currentUser', JSON.stringify(currentUser));
-        
-        showMessage(loginMessage, '¡Inicio de sesión exitoso! Redirigiendo...', 'success');
-        
-        // Redirigir después de 1 segundo
-        setTimeout(() => {
-            redirectAfterLogin();
-        }, 1000);
-        
-    } else {
+    const user = users.find((u) => u.email === email && u.password === password);
+
+    if (!user) {
         showMessage(loginMessage, 'Correo electrónico o contraseña incorrectos', 'error');
+        return;
     }
+
+    const storedType = getUserType(user);
+
+    // Verificar tipo de usuario (consumer / creator)
+    if (storedType !== userType) {
+        showMessage(
+            loginMessage,
+            `Este correo está registrado como ${storedType === 'creator' ? 'creador' : 'consumidor'}`,
+            'error'
+        );
+        return;
+    }
+
+    // Iniciar sesión
+    currentUser = user;
+    localStorage.setItem('legado_currentUser', JSON.stringify(currentUser));
+
+    showMessage(loginMessage, '¡Inicio de sesión exitoso! Redirigiendo...', 'success');
+
+    setTimeout(() => {
+        redirectAfterLogin();
+    }, 1000);
 }
 
-// Manejar registro
 function handleRegister(e) {
     e.preventDefault();
-    
-    const name = document.getElementById('registerName').value;
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
-    const userType = document.querySelector('input[name="registerUserType"]:checked').value;
+
+    const name = document.getElementById('registerName')?.value.trim();
+    const email = document.getElementById('registerEmail')?.value.trim();
+    const password = document.getElementById('registerPassword')?.value;
+    const userType = document.querySelector('input[name="registerUserType"]:checked')?.value;
 
     // Validar campos
     if (!name || !email || !password) {
@@ -121,10 +172,12 @@ function handleRegister(e) {
     }
 
     // Verificar si el usuario ya existe
-    if (users.find(u => u.email === email)) {
+    if (users.find((u) => u.email === email)) {
         showMessage(registerMessage, 'Este correo electrónico ya está registrado', 'error');
         return;
     }
+
+    const isCreator = userType === 'creator';
 
     // Crear nuevo usuario
     const newUser = {
@@ -132,10 +185,11 @@ function handleRegister(e) {
         name,
         email,
         password,
-        type: userType,
-        isCreator: userType === 'creator',
-        hasPaid: userType === 'consumer', // Los consumidores no necesitan pagar
-        createdAt: new Date().toISOString()
+        // Campos para compatibilidad con todo el sitio
+        type: userType,             // 'creator' o 'consumer'
+        isCreator: isCreator,       // booleano
+        hasPaid: !isCreator,        // los consumidores no necesitan pagar
+        createdAt: new Date().toISOString(),
     };
 
     users.push(newUser);
@@ -146,39 +200,11 @@ function handleRegister(e) {
 
     showMessage(registerMessage, '¡Registro exitoso! Redirigiendo...', 'success');
 
-    // Redirigir según el tipo de usuario
     setTimeout(() => {
         redirectAfterLogin();
     }, 1000);
 }
 
-// Redirigir después del login/registro
-function redirectAfterLogin() {
-    if (!currentUser) return;
-    
-    if (currentUser.type === 'creator' && !currentUser.hasPaid) {
-        // Creador que no ha pagado -> ir a página de pago
-        window.location.href = 'payment.html';
-    } else if (currentUser.type === 'creator' && currentUser.hasPaid) {
-        // Creador verificado -> ir al dashboard
-        window.location.href = 'dashboard-creator.html';
-    } else {
-        // Consumidor -> ir al inicio
-        window.location.href = 'index.html';
-    }
-}
+// ====================== ARRANQUE ======================
 
-// Mostrar mensajes
-function showMessage(element, text, type) {
-    element.textContent = text;
-    element.className = `message ${type}`;
-    element.style.display = 'block';
-    
-    // Ocultar mensaje después de 5 segundos
-    setTimeout(() => {
-        element.style.display = 'none';
-    }, 5000);
-}
-
-// Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', initAuth);
