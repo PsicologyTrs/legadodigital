@@ -1,7 +1,5 @@
 // js/dashboard.js
 // Panel del Creador: usa Supabase para gestionar contenido del usuario
-// js/dashboard.js
-import { supabase } from './supabaseClient.js';
 const supabaseClient = window.supabaseClient || null;
 let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null;
 
