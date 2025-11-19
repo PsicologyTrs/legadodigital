@@ -8,7 +8,9 @@ let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null
 // Contenido guardado en localStorage (por ahora sigue siendo local)
 let content = JSON.parse(localStorage.getItem('legado_content')) || [];
 // Cliente Supabase expuesto en window por supabaseClient.js
-const supabaseClient = window.supabase || null;
+// Cliente de Supabase creado en supabaseClient.js
+const supabaseClient = window.supabaseClient || null;
+
 
 // Nuevo botón para ir al panel del creador
 const creatorDashboardBtn = document.getElementById('creatorDashboardBtn');
