@@ -23,7 +23,7 @@ const registerCard = document.getElementById('registerCard');
 function getUserType(user) {
     if (!user) return null;
     if (user.type === 'creator' || user.type === 'consumer') return user.type;
-    // Fallback para usuarios creados desde index.html
+    // Fallback para usuarios creados desde otros lados
     if (user.isCreator) return 'creator';
     return 'consumer';
 }
@@ -64,6 +64,13 @@ function redirectAfterLogin() {
 function initAuth() {
     setupEventListeners();
     checkExistingSession();
+
+    // Si viene desde index con #register, mostrar directamente el formulario de registro
+    if (window.location.hash === '#register') {
+        showRegisterForm();
+    } else if (window.location.hash === '#login') {
+        showLoginForm();
+    }
 }
 
 // Configurar event listeners
@@ -94,7 +101,6 @@ function setupEventListeners() {
 // Verificar si hay sesión activa
 function checkExistingSession() {
     if (currentUser) {
-        // Si ya está logueado, redirigir según su tipo
         redirectAfterLogin();
     }
 }
@@ -185,10 +191,9 @@ function handleRegister(e) {
         name,
         email,
         password,
-        // Campos para compatibilidad con todo el sitio
-        type: userType,             // 'creator' o 'consumer'
-        isCreator: isCreator,       // booleano
-        hasPaid: !isCreator,        // los consumidores no necesitan pagar
+        type: userType,       // 'creator' o 'consumer'
+        isCreator: isCreator, // booleano
+        hasPaid: !isCreator,  // los consumidores no necesitan pagar
         createdAt: new Date().toISOString(),
     };
 
