@@ -5,12 +5,12 @@
 // { id, name, email, type: 'consumer'|'creator', isCreator, hasPaid, creatorSince, paymentMethod }
 let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null;
 
-// Contenido guardado en localStorage (por ahora sigue siendo local)
+// Contenido guardado en localStorage (por ahora sigue siendo local para lo que se agrega desde index)
+// Además, más abajo cargamos CONTENIDO REAL de creadores desde Supabase.
 let content = JSON.parse(localStorage.getItem('legado_content')) || [];
-// Cliente Supabase expuesto en window por supabaseClient.js
+
 // Cliente de Supabase creado en supabaseClient.js
 const supabaseClient = window.supabaseClient || null;
-
 
 // Nuevo botón para ir al panel del creador
 const creatorDashboardBtn = document.getElementById('creatorDashboardBtn');
@@ -23,7 +23,7 @@ const userName = document.getElementById('userName');
 const userAvatar = document.getElementById('userAvatar');
 const creatorBadge = document.getElementById('creatorBadge');
 
-const loginBtn = document.getElementById('loginBtn');     // <a href="login.html#login">
+const loginBtn = document.getElementById('loginBtn');       // <a href="login.html#login">
 const registerBtn = document.getElementById('registerBtn'); // <a href="login.html#register">
 const logoutBtn = document.getElementById('logoutBtn');
 
@@ -49,16 +49,21 @@ let currentPaymentMethod = 'card';
 
 function initApp() {
   updateUI();
-  loadInitialContent();
-  loadContent();
+  loadInitialContent();  // Semilla local (sistema)
+  loadContent();         // Pinta lo local (inicial + lo agregado desde index)
+
+  // 🔥 Cargar contenido real de creadores desde Supabase (más reciente primero)
+  if (supabaseClient) {
+    fetchRemoteContent();
+  }
 
   // Botones del header (login / registro simplemente navegan a login.html)
   if (loginBtn) {
-    // No interceptamos el click para que el <a> haga la navegación normal
+    // Navegación normal
   }
 
   if (registerBtn) {
-    // Igual, navegación normal a login.html
+    // Navegación normal
   }
 
   if (addContentBtn) {
@@ -73,6 +78,7 @@ function initApp() {
       }
     });
   }
+
   if (creatorDashboardBtn) {
     creatorDashboardBtn.addEventListener('click', () => {
       // Solo para creadores con pago
@@ -123,7 +129,7 @@ function initApp() {
     payBtn.addEventListener('click', handlePayment);
   }
 
-  // Formularios de contenido (AGREGAR)
+  // Formularios de contenido (AGREGAR) — estos siguen siendo locales en index
   const videoForm = document.getElementById('videoForm');
   const audioForm = document.getElementById('audioForm');
   const imageForm = document.getElementById('imageForm');
@@ -134,7 +140,7 @@ function initApp() {
   if (imageForm) imageForm.addEventListener('submit', (e) => handleAddContent(e, 'image'));
   if (phraseForm) phraseForm.addEventListener('submit', (e) => handleAddContent(e, 'phrase'));
 
-  // Formularios de contenido (EDITAR)
+  // Formularios de contenido (EDITAR) — solo para contenido local
   const editVideoForm = document.getElementById('editVideoForm');
   const editAudioForm = document.getElementById('editAudioForm');
   const editImageForm = document.getElementById('editImageForm');
@@ -147,6 +153,77 @@ function initApp() {
 
   // Inputs de archivos
   setupFileInputs();
+}
+
+// ========== CARGA DE CONTENIDO DESDE SUPABASE ==========
+
+async function fetchRemoteContent() {
+  try {
+    // Ajusta 'content' si tu tabla tiene otro nombre
+    const { data, error } = await supabaseClient
+      .from('content')
+      .select('*')
+      .order('created_at', { ascending: false }); // 🔥 Más reciente primero
+
+    if (error) {
+      console.error('Error cargando contenido remoto (Supabase):', error);
+      return;
+    }
+
+    if (!Array.isArray(data)) return;
+
+    const mapped = data.map(row => {
+      // Normalizar etiquetas: array o string "a,b,c"
+      let tags = [];
+      if (Array.isArray(row.tags)) {
+        tags = row.tags;
+      } else if (typeof row.tags === 'string') {
+        tags = row.tags
+          .split(',')
+          .map(t => t.trim())
+          .filter(Boolean);
+      }
+
+      const base = {
+        id: String(row.id),
+        type: row.type,
+        url: row.url || '',
+        tags,
+        userId: row.user_id || row.userId || 'creator',
+        userName: row.user_name || row.userName || row.author || 'Creador',
+        createdAt: row.created_at || row.createdAt || new Date().toISOString(),
+        source: 'supabase' // 👈 Marcamos como remoto para no editar desde index
+      };
+
+      if (row.type === 'phrase') {
+        return {
+          ...base,
+          text: row.text || row.description || '',
+          author: row.author || base.userName,
+          context: row.context || ''
+        };
+      } else {
+        return {
+          ...base,
+          title: row.title || '',
+          description: row.description || ''
+        };
+      }
+    });
+
+    // Evitar duplicados por id (por si ya hay algo en local con el mismo id)
+    const existingIds = new Set(content.map(c => String(c.id)));
+    mapped.forEach(item => {
+      if (!existingIds.has(String(item.id))) {
+        content.push(item);
+      }
+    });
+
+    // No guardamos en localStorage el contenido remoto para que siempre sea "vivo"
+    loadContent(); // Re-pintar con lo remoto incluido
+  } catch (err) {
+    console.error('Error inesperado al cargar contenido remoto:', err);
+  }
 }
 
 // ========== CONFIGURAR INPUTS DE ARCHIVO ==========
@@ -255,10 +332,12 @@ function setupFileInputs() {
   }
 }
 
-// ========== CONTENIDO INICIAL ==========
+// ========== CONTENIDO INICIAL (SEMILLA LOCAL) ==========
 
 function loadInitialContent() {
   if (content.length === 0) {
+    const now = new Date().toISOString();
+
     content = [
       // --- Videos ---
       {
@@ -270,7 +349,8 @@ function loadInitialContent() {
         tags: ['Video', 'Oral History', 'Región: Andina'],
         userId: 'system',
         userName: 'Sistema',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        source: 'local'
       },
       {
         id: '2',
@@ -281,7 +361,8 @@ function loadInitialContent() {
         tags: ['Documental', 'Educación', 'Patrimonio'],
         userId: 'system',
         userName: 'Sistema',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        source: 'local'
       },
 
       // --- Audios ---
@@ -294,7 +375,8 @@ function loadInitialContent() {
         tags: ['Audio', 'Tradición oral', 'Canto'],
         userId: 'system',
         userName: 'Sistema',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        source: 'local'
       },
       {
         id: '4',
@@ -305,7 +387,8 @@ function loadInitialContent() {
         tags: ['Podcast', 'Conversación', 'Cultura'],
         userId: 'system',
         userName: 'Sistema',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        source: 'local'
       },
 
       // --- Imágenes ---
@@ -318,7 +401,8 @@ function loadInitialContent() {
         tags: ['Foto', 'Espacio público', 'Histórico'],
         userId: 'system',
         userName: 'Sistema',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        source: 'local'
       },
       {
         id: '6',
@@ -329,7 +413,8 @@ function loadInitialContent() {
         tags: ['Arquitectura', 'Patrimonio', 'Edificio'],
         userId: 'system',
         userName: 'Sistema',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        source: 'local'
       },
       {
         id: '7',
@@ -340,7 +425,8 @@ function loadInitialContent() {
         tags: ['Cultura', 'Patrimonio', 'Tradición'],
         userId: 'system',
         userName: 'Sistema',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        source: 'local'
       },
       {
         id: '8',
@@ -351,7 +437,8 @@ function loadInitialContent() {
         tags: ['Arquitectura', 'Histórico', 'Conservación'],
         userId: 'system',
         userName: 'Sistema',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        source: 'local'
       },
       {
         id: '9',
@@ -362,7 +449,8 @@ function loadInitialContent() {
         tags: ['Arquitectura', 'Patrimonio', 'Detalle'],
         userId: 'system',
         userName: 'Sistema',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        source: 'local'
       },
 
       // --- Frases ---
@@ -375,7 +463,8 @@ function loadInitialContent() {
         tags: ['Poesía', 'Santa Marta', 'Naturaleza'],
         userId: 'system',
         userName: 'Sistema',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        source: 'local'
       },
       {
         id: '11',
@@ -386,7 +475,8 @@ function loadInitialContent() {
         tags: ['Cita', 'Amor', 'Cultura'],
         userId: 'system',
         userName: 'Sistema',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        source: 'local'
       }
     ];
 
@@ -403,7 +493,7 @@ function updateUI() {
     userInfo.style.display = 'flex';
     authButtons.style.display = 'none';
 
-        if (currentUser.isCreator && currentUser.hasPaid) {
+    if (currentUser.isCreator && currentUser.hasPaid) {
       addContentBtn.style.display = 'flex';
       creatorBadge.style.display = 'inline-block';
       if (creatorDashboardBtn) creatorDashboardBtn.style.display = 'inline-flex';
@@ -412,7 +502,6 @@ function updateUI() {
       creatorBadge.style.display = 'none';
       if (creatorDashboardBtn) creatorDashboardBtn.style.display = 'none';
     }
-
 
     userName.textContent = currentUser.name || 'Usuario';
     userAvatar.textContent = (currentUser.name || 'U').charAt(0).toUpperCase();
@@ -423,8 +512,6 @@ function updateUI() {
     creatorBadge.style.display = 'none';
     if (creatorDashboardBtn) creatorDashboardBtn.style.display = 'none';
   }
-
-
 }
 
 // ========== MODALES GENERALES ==========
@@ -507,7 +594,6 @@ async function handlePayment() {
   }
 }
 
-
 function showPaymentMessage(message, type) {
   if (!paymentMessage) return;
   paymentMessage.textContent = message;
@@ -530,10 +616,9 @@ async function logout() {
   }
 
   updateUI();
-  loadContent(); // sigue recargando el contenido local
+  loadContent(); // sigue recargando el contenido (local + remoto cargado previamente)
   alert('Sesión cerrada');
 }
-
 
 // ========== CONTENIDO: AGREGAR / EDITAR / ELIMINAR / PINTAR ==========
 
@@ -612,7 +697,8 @@ function handleAddContent(e, type) {
     ...contentData,
     userId: currentUser.id,
     userName: currentUser.name,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    source: 'local' // 👈 Local, editable desde index
   };
 
   content.push(newContent);
@@ -644,6 +730,10 @@ function handleEditContent(e, type) {
       const videoFile = document.getElementById('editVideoFile').files[0];
       const existing = content.find(item => item.id === contentId);
       if (!existing) { alert('Error: Contenido no encontrado'); return; }
+      if (existing.source === 'supabase') {
+        alert('Este contenido proviene del panel de creadores y no se puede editar desde aquí.');
+        return;
+      }
       const videoUrl = videoFile ? URL.createObjectURL(videoFile) : existing.url;
       contentData = {
         title: document.getElementById('editVideoTitle').value,
@@ -659,6 +749,10 @@ function handleEditContent(e, type) {
       const audioFile = document.getElementById('editAudioFile').files[0];
       const existing = content.find(item => item.id === contentId);
       if (!existing) { alert('Error: Contenido no encontrado'); return; }
+      if (existing.source === 'supabase') {
+        alert('Este contenido proviene del panel de creadores y no se puede editar desde aquí.');
+        return;
+      }
       const audioUrl = audioFile ? URL.createObjectURL(audioFile) : existing.url;
       contentData = {
         title: document.getElementById('editAudioTitle').value,
@@ -674,6 +768,10 @@ function handleEditContent(e, type) {
       const imageFile = document.getElementById('editImageFile').files[0];
       const existing = content.find(item => item.id === contentId);
       if (!existing) { alert('Error: Contenido no encontrado'); return; }
+      if (existing.source === 'supabase') {
+        alert('Este contenido proviene del panel de creadores y no se puede editar desde aquí.');
+        return;
+      }
       const imageUrl = imageFile ? URL.createObjectURL(imageFile) : existing.url;
       contentData = {
         title: document.getElementById('editImageTitle').value,
@@ -688,6 +786,10 @@ function handleEditContent(e, type) {
       contentId = document.getElementById('editPhraseId').value;
       const existing = content.find(item => item.id === contentId);
       if (!existing) { alert('Error: Contenido no encontrado'); return; }
+      if (existing.source === 'supabase') {
+        alert('Este contenido proviene del panel de creadores y no se puede editar desde aquí.');
+        return;
+      }
       contentData = {
         text: document.getElementById('editPhraseText').value,
         author: document.getElementById('editPhraseAuthor').value,
@@ -724,6 +826,11 @@ function deleteContent(contentId) {
   const contentItem = content.find(item => item.id === contentId);
   if (!contentItem) { alert('Error: Contenido no encontrado'); return; }
 
+  if (contentItem.source === 'supabase') {
+    alert('Este contenido proviene del panel de creadores y no se puede eliminar desde aquí.');
+    return;
+  }
+
   if (contentItem.userId !== currentUser.id && contentItem.userId !== 'system') {
     alert('Solo puedes eliminar tu propio contenido');
     return;
@@ -745,6 +852,11 @@ function editContent(contentId) {
 
   const contentItem = content.find(item => item.id === contentId);
   if (!contentItem) { alert('Error: Contenido no encontrado'); return; }
+
+  if (contentItem.source === 'supabase') {
+    alert('Este contenido proviene del panel de creadores. Edítalo desde tu panel.');
+    return;
+  }
 
   if (contentItem.userId !== currentUser.id && contentItem.userId !== 'system') {
     alert('Solo puedes editar tu propio contenido');
@@ -840,7 +952,11 @@ function loadContent() {
 
 // Render helpers
 function renderVideo(item) {
-  const canEdit = currentUser && (item.userId === currentUser.id || item.userId === 'system');
+  // 👇 Solo se puede editar/eliminar si es contenido local
+  const canEdit = currentUser &&
+    item.source !== 'supabase' &&
+    (item.userId === currentUser.id || item.userId === 'system');
+
   const html = `
     <article class="content-item">
       ${canEdit ? `
@@ -860,13 +976,13 @@ function renderVideo(item) {
       </div>
       <aside class="meta">
         <h3>${item.title}</h3>
-        <p class="desc">${item.description}</p>
+        <p class="desc">${item.description || ''}</p>
         <div class="tags">
-          ${item.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          ${(item.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
         </div>
         <div class="content-author">
-          <div class="author-avatar">${item.userName.charAt(0).toUpperCase()}</div>
-          <span class="author-name">Publicado por ${item.userName}</span>
+          <div class="author-avatar">${(item.userName || 'C').charAt(0).toUpperCase()}</div>
+          <span class="author-name">Publicado por ${item.userName || 'Creador'}</span>
         </div>
       </aside>
     </article>`;
@@ -874,7 +990,10 @@ function renderVideo(item) {
 }
 
 function renderAudio(item) {
-  const canEdit = currentUser && (item.userId === currentUser.id || item.userId === 'system');
+  const canEdit = currentUser &&
+    item.source !== 'supabase' &&
+    (item.userId === currentUser.id || item.userId === 'system');
+
   const html = `
     <article class="content-item">
       ${canEdit ? `
@@ -894,13 +1013,13 @@ function renderAudio(item) {
       </div>
       <aside class="meta">
         <h3>${item.title}</h3>
-        <p class="desc">${item.description}</p>
+        <p class="desc">${item.description || ''}</p>
         <div class="tags">
-          ${item.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          ${(item.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
         </div>
         <div class="content-author">
-          <div class="author-avatar">${item.userName.charAt(0).toUpperCase()}</div>
-          <span class="author-name">Publicado por ${item.userName}</span>
+          <div class="author-avatar">${(item.userName || 'C').charAt(0).toUpperCase()}</div>
+          <span class="author-name">Publicado por ${item.userName || 'Creador'}</span>
         </div>
       </aside>
     </article>`;
@@ -908,7 +1027,10 @@ function renderAudio(item) {
 }
 
 function renderImage(item) {
-  const canEdit = currentUser && (item.userId === currentUser.id || item.userId === 'system');
+  const canEdit = currentUser &&
+    item.source !== 'supabase' &&
+    (item.userId === currentUser.id || item.userId === 'system');
+
   const html = `
     <article class="content-item">
       ${canEdit ? `
@@ -925,13 +1047,13 @@ function renderImage(item) {
       </div>
       <aside class="meta">
         <h3>${item.title}</h3>
-        <p class="desc">${item.description}</p>
+        <p class="desc">${item.description || ''}</p>
         <div class="tags">
-          ${item.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          ${(item.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
         </div>
         <div class="content-author">
-          <div class="author-avatar">${item.userName.charAt(0).toUpperCase()}</div>
-          <span class="author-name">Publicado por ${item.userName}</span>
+          <div class="author-avatar">${(item.userName || 'C').charAt(0).toUpperCase()}</div>
+          <span class="author-name">Publicado por ${item.userName || 'Creador'}</span>
         </div>
       </aside>
     </article>`;
@@ -939,7 +1061,10 @@ function renderImage(item) {
 }
 
 function renderPhrase(item) {
-  const canEdit = currentUser && (item.userId === currentUser.id || item.userId === 'system');
+  const canEdit = currentUser &&
+    item.source !== 'supabase' &&
+    (item.userId === currentUser.id || item.userId === 'system');
+
   const html = `
     <article class="phrase-item">
       ${canEdit ? `
@@ -951,16 +1076,16 @@ function renderPhrase(item) {
             <i class="fas fa-trash"></i>
           </button>
         </div>` : ''}
-      <div class="phrase-text">"${item.text}"</div>
+      <div class="phrase-text">"${item.text || item.description || ''}"</div>
       <div>
-        <h3 class="phrase-author">${item.author}</h3>
-        <p class="phrase-context">${item.context}</p>
+        <h3 class="phrase-author">${item.author || item.userName || ''}</h3>
+        <p class="phrase-context">${item.context || ''}</p>
         <div class="phrase-tags">
-          ${item.tags.map(tag => `<span class="phrase-tag">${tag}</span>`).join('')}
+          ${(item.tags || []).map(tag => `<span class="phrase-tag">${tag}</span>`).join('')}
         </div>
         <div class="content-author" style="justify-content:center;margin-top:15px;">
-          <div class="author-avatar">${item.userName.charAt(0).toUpperCase()}</div>
-          <span class="author-name">Publicado por ${item.userName}</span>
+          <div class="author-avatar">${(item.userName || 'C').charAt(0).toUpperCase()}</div>
+          <span class="author-name">Publicado por ${item.userName || 'Creador'}</span>
         </div>
       </div>
     </article>`;
