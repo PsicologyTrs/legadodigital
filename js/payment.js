@@ -9,7 +9,6 @@ const WOMPI_PAYMENT_LINK = 'https://checkout.wompi.co/l/test_bXBSfQ';
 const paymentForm = document.getElementById('paymentForm');
 const paymentMessage = document.getElementById('paymentMessage');
 const payButton = document.getElementById('payButton');
-const methodCards = document.querySelectorAll('.method-card');
 
 const userInfo = document.getElementById('userInfo');
 const userName = document.getElementById('userName');
@@ -17,7 +16,6 @@ const userAvatar = document.getElementById('userAvatar');
 
 // ====================== ESTADO ======================
 
-let currentPaymentMethod = 'pse';
 let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null;
 
 // ====================== INICIALIZACIÓN ======================
@@ -69,26 +67,9 @@ function prefillUserData() {
 // ====================== EVENT LISTENERS ======================
 
 function setupEventListeners() {
-    // Selección de método de pago (solo afecta al estado local)
-    methodCards.forEach((card) => {
-        card.addEventListener('click', () => {
-            methodCards.forEach((c) => c.classList.remove('active'));
-            card.classList.add('active');
-            currentPaymentMethod = card.dataset.method || 'pse';
-            updatePaymentForm();
-        });
-    });
-
-    // Envío del formulario
     if (paymentForm) {
         paymentForm.addEventListener('submit', handlePayment);
     }
-}
-
-function updatePaymentForm() {
-    // Por ahora solo usamos un link de Wompi para todo,
-    // pero dejamos el log por si luego quieres personalizar.
-    console.log('Método de pago seleccionado:', currentPaymentMethod);
 }
 
 // ====================== VALIDACIÓN ======================
@@ -98,11 +79,9 @@ function validateForm() {
     const email = document.getElementById('email')?.value.trim();
     const documentType = document.getElementById('documentType')?.value;
     const documentNumber = document.getElementById('document')?.value.trim();
-    const bank = document.getElementById('bank')?.value;
-    const accountType = document.getElementById('accountType')?.value;
     const acceptTerms = document.getElementById('acceptTerms')?.checked;
 
-    if (!fullName || !email || !documentType || !documentNumber || !bank || !accountType) {
+    if (!fullName || !email || !documentType || !documentNumber) {
         showPaymentMessage('Por favor completa todos los campos obligatorios', 'error');
         return false;
     }
@@ -112,11 +91,19 @@ function validateForm() {
         return false;
     }
 
-    // Validar email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         showPaymentMessage('Por favor ingresa un correo electrónico válido', 'error');
         return false;
+    }
+
+    // Extra: advertir si el email escrito no coincide con el de la sesión
+    if (currentUser && currentUser.email && email.toLowerCase() !== currentUser.email.toLowerCase()) {
+        const msg =
+            'El correo que escribiste no coincide con el de tu cuenta.\n\n' +
+            'Te recomendamos usar exactamente el mismo correo que ves arriba ' +
+            'para que podamos vincular el pago correctamente.';
+        alert(msg);
     }
 
     return true;
@@ -141,13 +128,12 @@ async function handlePayment(e) {
         payButton.disabled = true;
     }
 
-    // Guardar intención de pago (por si luego quieres usarla)
+    // Guardar intención de pago (opcional, para debug o futuro tracking)
     localStorage.setItem(
         'legado_lastPaymentIntent',
         JSON.stringify({
             userId: currentUser.id,
             email: currentUser.email,
-            method: currentPaymentMethod,
             createdAt: new Date().toISOString(),
         })
     );
@@ -157,7 +143,6 @@ async function handlePayment(e) {
         'info'
     );
 
-    // Pequeña pausa visual y luego redirigir al link de Wompi
     setTimeout(() => {
         window.location.href = WOMPI_PAYMENT_LINK;
     }, 800);

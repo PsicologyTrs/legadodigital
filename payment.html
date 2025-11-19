@@ -85,28 +85,16 @@
                 </div>
             </div>
 
-            <!-- MÉTODOS DE PAGO -->
+            <!-- INFO: pago vía Wompi -->
             <div class="payment-methods">
-                <h3 class="methods-title">Selecciona tu método de pago</h3>
-                <div class="methods-grid">
-                    <div class="method-card active" data-method="pse">
-                        <div class="method-icon">
-                            <i class="fas fa-university"></i>
-                        </div>
-                        <div class="method-name">PSE</div>
-                        <div class="method-desc">Pago en línea bancario</div>
-                    </div>
-                    <div class="method-card" data-method="card">
-                        <div class="method-icon">
-                            <i class="fas fa-credit-card"></i>
-                        </div>
-                        <div class="method-name">Tarjeta</div>
-                        <div class="method-desc">Crédito/Débito</div>
-                    </div>
-                </div>
+                <h3 class="methods-title">Pago seguro con Wompi</h3>
+                <p style="color: var(--muted); max-width: 600px;">
+                    Serás redirigido a la pasarela de pagos de <strong>Wompi</strong> para completar tu compra.
+                    Allí podrás elegir PSE, tarjeta u otros métodos disponibles.
+                </p>
             </div>
 
-            <!-- FORMULARIO DE PAGO -->
+            <!-- FORMULARIO DE PAGO (solo datos básicos) -->
             <form id="paymentForm" class="payment-form">
                 <div class="form-section">
                     <h3 class="section-title">
@@ -145,36 +133,6 @@
                         <div class="form-group">
                             <label for="document">Número de Documento</label>
                             <input type="text" id="document" class="form-control" required>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- INFORMACIÓN BANCARIA PSE -->
-                <div class="form-section" id="pseSection">
-                    <h3 class="section-title">
-                        <i class="fas fa-university"></i>
-                        Información Bancaria PSE
-                    </h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="bank">Banco</label>
-                            <select id="bank" class="form-control" required>
-                                <option value="">Seleccionar banco...</option>
-                                <option value="bancolombia">Bancolombia</option>
-                                <option value="davivienda">Davivienda</option>
-                                <option value="bbva">BBVA</option>
-                                <option value="bogota">Banco de Bogotá</option>
-                                <option value="popular">Banco Popular</option>
-                                <option value="avvillas">AV Villas</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="accountType">Tipo de Cuenta</label>
-                            <select id="accountType" class="form-control" required>
-                                <option value="">Seleccionar...</option>
-                                <option value="savings">Cuenta de Ahorros</option>
-                                <option value="checking">Cuenta Corriente</option>
-                            </select>
                         </div>
                     </div>
                 </div>
