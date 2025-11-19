@@ -26,3 +26,4 @@
   // Lo exponemos en window para reutilizarlo en otros scripts
   window.supabaseClient = client;
 })();
+

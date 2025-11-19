@@ -7,6 +7,11 @@ let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null
 
 // Contenido guardado en localStorage (por ahora sigue siendo local)
 let content = JSON.parse(localStorage.getItem('legado_content')) || [];
+// Cliente Supabase expuesto en window por supabaseClient.js
+const supabaseClient = window.supabase || null;
+
+// Nuevo botón para ir al panel del creador
+const creatorDashboardBtn = document.getElementById('creatorDashboardBtn');
 
 // Elementos del DOM (index.html)
 const userInfo = document.getElementById('userInfo');
@@ -64,6 +69,20 @@ function initApp() {
         alert('Debes completar el pago de creador para agregar contenido.');
         if (paymentModal) showModal(paymentModal);
       }
+    });
+  }
+  if (creatorDashboardBtn) {
+    creatorDashboardBtn.addEventListener('click', () => {
+      // Solo para creadores con pago
+      if (!currentUser) {
+        window.location.href = 'login.html#login';
+        return;
+      }
+      if (!currentUser.isCreator || !currentUser.hasPaid) {
+        alert('Debes ser creador y haber completado el pago para acceder al panel.');
+        return;
+      }
+      window.location.href = 'dashboard-creator.html';
     });
   }
 
@@ -382,13 +401,16 @@ function updateUI() {
     userInfo.style.display = 'flex';
     authButtons.style.display = 'none';
 
-    if (currentUser.isCreator && currentUser.hasPaid) {
+        if (currentUser.isCreator && currentUser.hasPaid) {
       addContentBtn.style.display = 'flex';
       creatorBadge.style.display = 'inline-block';
+      if (creatorDashboardBtn) creatorDashboardBtn.style.display = 'inline-flex';
     } else {
       addContentBtn.style.display = 'none';
       creatorBadge.style.display = 'none';
+      if (creatorDashboardBtn) creatorDashboardBtn.style.display = 'none';
     }
+
 
     userName.textContent = currentUser.name || 'Usuario';
     userAvatar.textContent = (currentUser.name || 'U').charAt(0).toUpperCase();
@@ -397,7 +419,10 @@ function updateUI() {
     authButtons.style.display = 'flex';
     addContentBtn.style.display = 'none';
     creatorBadge.style.display = 'none';
+    if (creatorDashboardBtn) creatorDashboardBtn.style.display = 'none';
   }
+
+
 }
 
 // ========== MODALES GENERALES ==========
@@ -410,12 +435,13 @@ function showModal(modal) {
 
 // ========== PAGO DE CREADOR (SIMULADO) ==========
 
-function handlePayment() {
+async function handlePayment() {
   if (!currentUser) {
     alert('Debes iniciar sesión como creador para realizar el pago.');
     return;
   }
 
+  // Validación básica tarjeta (solo si está seleccionada)
   if (currentPaymentMethod === 'card') {
     const cardNumber = document.getElementById('cardNumber')?.value;
     const expiryDate = document.getElementById('expiryDate')?.value;
@@ -430,23 +456,55 @@ function handlePayment() {
 
   showPaymentMessage('Procesando pago...', 'info');
 
-  setTimeout(() => {
-    showPaymentMessage('¡Pago exitoso! Ahora tienes acceso completo a las herramientas de creador.', 'success');
+  try {
+    // Pequeña pausa visual
+    await new Promise(res => setTimeout(res, 1200));
 
-    // Actualizar usuario en localStorage
-    currentUser.hasPaid = true;
+    if (supabaseClient) {
+      // Actualizar el perfil en la tabla profiles
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .update({
+          has_paid: true,
+          payment_method: currentPaymentMethod,
+          creator_since: new Date().toISOString()
+        })
+        .eq('id', currentUser.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error actualizando perfil en Supabase', error);
+        showPaymentMessage(
+          'El pago se procesó, pero hubo un problema guardando en la base de datos. Intenta de nuevo.',
+          'error'
+        );
+        return;
+      }
+
+      // Sincronizar con el objeto local
+      currentUser.hasPaid = data.has_paid;
+      currentUser.paymentMethod = data.payment_method;
+      currentUser.creatorSince = data.creator_since;
+    } else {
+      // Fallback: solo marcar localmente
+      currentUser.hasPaid = true;
+    }
+
     localStorage.setItem('legado_currentUser', JSON.stringify(currentUser));
 
-    // TODO: aquí podrías llamar a Supabase para actualizar profiles.has_paid = true
-
+    showPaymentMessage('¡Pago exitoso! Ahora tienes acceso completo a las herramientas de creador.', 'success');
     updateUI();
 
     setTimeout(() => {
       if (paymentModal) paymentModal.classList.remove('active');
-      loadContent();
-    }, 2000);
-  }, 2000);
+    }, 1500);
+  } catch (err) {
+    console.error(err);
+    showPaymentMessage('Ocurrió un error inesperado procesando el pago.', 'error');
+  }
 }
+
 
 function showPaymentMessage(message, type) {
   if (!paymentMessage) return;
@@ -457,13 +515,23 @@ function showPaymentMessage(message, type) {
 
 // ========== SESIÓN ==========
 
-function logout() {
+async function logout() {
   currentUser = null;
   localStorage.removeItem('legado_currentUser');
+
+  if (supabaseClient) {
+    try {
+      await supabaseClient.auth.signOut();
+    } catch (e) {
+      console.error('Error cerrando sesión en Supabase', e);
+    }
+  }
+
   updateUI();
-  loadContent();
+  loadContent(); // sigue recargando el contenido local
   alert('Sesión cerrada');
 }
+
 
 // ========== CONTENIDO: AGREGAR / EDITAR / ELIMINAR / PINTAR ==========
 

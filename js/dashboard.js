@@ -1,459 +1,442 @@
-// Dashboard del Creador - dashboard.js
-'use strict';
+// js/dashboard.js
+// Panel del Creador: usa Supabase para gestionar contenido del usuario
 
-// ====================== ELEMENTOS DEL DOM ======================
+const supabaseClient = window.supabase || null;
+let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null;
+let creatorContent = [];
 
-const userInfo = document.getElementById('userInfo');
-const userName = document.getElementById('userName');
-const userAvatar = document.getElementById('userAvatar');
+// Elementos del DOM
+const userNameEl = document.getElementById('userName');
+const userAvatarEl = document.getElementById('userAvatar');
 const logoutBtn = document.getElementById('logoutBtn');
+
+const totalContentEl = document.getElementById('totalContent');
+const totalVideosEl = document.getElementById('totalVideos');
+const totalAudiosEl = document.getElementById('totalAudios');
+const totalImagesEl = document.getElementById('totalImages');
 
 const contentGrid = document.getElementById('contentGrid');
 const contentFilter = document.getElementById('contentFilter');
 
-const addVideoBtn = document.getElementById('addVideoBtn');
-const addAudioBtn = document.getElementById('addAudioBtn');
-const addImageBtn = document.getElementById('addImageBtn');
-const addPhraseBtn = document.getElementById('addPhraseBtn');
-
 const contentModal = document.getElementById('contentModal');
+const modalTitleEl = document.getElementById('modalTitle');
 const contentForm = document.getElementById('contentForm');
-const cancelContent = document.getElementById('cancelContent');
-const closeModal = document.querySelector('.close-modal');
-
-// Campos del formulario de contenido
+const contentIdInput = document.getElementById('contentId');
 const contentTypeInput = document.getElementById('contentType');
 const contentTitleInput = document.getElementById('contentTitle');
+const contentFileInput = document.getElementById('contentFile');
 const contentDescriptionInput = document.getElementById('contentDescription');
 const contentTagsInput = document.getElementById('contentTags');
 const contentAuthorInput = document.getElementById('contentAuthor');
-const contentFileInput = document.getElementById('contentFile');
-const fileInputLabel = document.getElementById('fileInputLabel');
-const fileNameSpan = document.getElementById('fileName');
 const phraseFields = document.getElementById('phraseFields');
 const fileInputGroup = document.getElementById('fileInputGroup');
-const modalTitle = document.getElementById('modalTitle');
 
-// ====================== ESTADO ======================
+const fileInputLabel = document.getElementById('fileInputLabel');
+const fileNameLabel = document.getElementById('fileName');
+const cancelContentBtn = document.getElementById('cancelContent');
+const closeModalBtn = contentModal?.querySelector('.close-modal');
 
-let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null;
-let userContent = JSON.parse(localStorage.getItem('legado_content')) || [];
-let currentEditingId = null;
+document.addEventListener('DOMContentLoaded', () => {
+  initDashboard();
+});
 
-// ====================== INICIALIZACIÓN ======================
+async function initDashboard() {
+  if (!supabaseClient) {
+    alert('No se pudo inicializar Supabase en este navegador.');
+    return;
+  }
 
-function initDashboard() {
-    const isCreatorUser =
-        currentUser &&
-        (currentUser.type === 'creator' || currentUser.isCreator === true) &&
-        currentUser.hasPaid;
+  try {
+    const { data: { user }, error } = await supabaseClient.auth.getUser();
+    if (error) console.error('Error getUser:', error);
 
-    if (!isCreatorUser) {
-        // Si no es un creador verificado, redirigir al login
-        window.location.href = 'login.html';
-        return;
+    // Si no hay sesión o no hay currentUser en local, redirigir
+    if (!user || !currentUser) {
+      window.location.href = 'login.html#login';
+      return;
     }
 
-    updateUserInfo();
-    setupEventListeners();
-    loadUserContent();
-    updateStats();
-}
+    if (!currentUser.isCreator) {
+      alert('Solo los creadores pueden acceder a este panel.');
+      window.location.href = 'index.html';
+      return;
+    }
 
-// ====================== UI USUARIO ======================
+    if (!currentUser.hasPaid) {
+      alert('Debes completar el pago de creador antes de acceder al panel.');
+      window.location.href = 'index.html';
+      return;
+    }
 
-function updateUserInfo() {
-    if (!currentUser) return;
-    if (userName) userName.textContent = currentUser.name;
-    if (userAvatar) userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
-}
+    // Rellenar cabecera
+    if (userNameEl) userNameEl.textContent = currentUser.name || user.email;
+    if (userAvatarEl) userAvatarEl.textContent = (currentUser.name || 'U').charAt(0).toUpperCase();
 
-// ====================== EVENT LISTENERS ======================
-
-function setupEventListeners() {
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
+      logoutBtn.addEventListener('click', async () => {
+        try {
+          await supabaseClient.auth.signOut();
+        } catch (e) {
+          console.error('Error al cerrar sesión', e);
+        }
+        localStorage.removeItem('legado_currentUser');
+        window.location.href = 'index.html';
+      });
     }
 
-    if (contentFilter) {
-        contentFilter.addEventListener('change', filterContent);
-    }
-
-    if (addVideoBtn) addVideoBtn.addEventListener('click', () => showContentModal('video'));
-    if (addAudioBtn) addAudioBtn.addEventListener('click', () => showContentModal('audio'));
-    if (addImageBtn) addImageBtn.addEventListener('click', () => showContentModal('image'));
-    if (addPhraseBtn) addPhraseBtn.addEventListener('click', () => showContentModal('phrase'));
-
-    if (cancelContent) cancelContent.addEventListener('click', hideContentModal);
-    if (closeModal) closeModal.addEventListener('click', hideContentModal);
-
-    if (contentModal) {
-        contentModal.addEventListener('click', (e) => {
-            if (e.target === contentModal) hideContentModal();
-        });
-    }
-
-    if (contentForm) {
-        contentForm.addEventListener('submit', handleContentSubmit);
-    }
-
-    if (contentFileInput) {
-        contentFileInput.addEventListener('change', handleFileSelect);
-    }
+    setupDashboardEvents();
+    await fetchAndRenderContent();
+  } catch (err) {
+    console.error(err);
+    alert('No se pudo cargar el panel del creador.');
+  }
 }
 
-// ====================== CARGA Y FILTRO DE CONTENIDO ======================
+function setupDashboardEvents() {
+  const addVideoBtn = document.getElementById('addVideoBtn');
+  const addAudioBtn = document.getElementById('addAudioBtn');
+  const addImageBtn = document.getElementById('addImageBtn');
+  const addPhraseBtn = document.getElementById('addPhraseBtn');
 
-function loadUserContent() {
-    if (!currentUser) return;
-    const userContentItems = userContent.filter((item) => item.userId === currentUser.id);
-    displayContent(userContentItems);
-}
+  if (addVideoBtn) addVideoBtn.addEventListener('click', () => openContentModal('video'));
+  if (addAudioBtn) addAudioBtn.addEventListener('click', () => openContentModal('audio'));
+  if (addImageBtn) addImageBtn.addEventListener('click', () => openContentModal('image'));
+  if (addPhraseBtn) addPhraseBtn.addEventListener('click', () => openContentModal('phrase'));
 
-function filterContent() {
-    if (!currentUser || !contentFilter) return;
+  if (cancelContentBtn) cancelContentBtn.addEventListener('click', closeContentModal);
+  if (closeModalBtn) closeModalBtn.addEventListener('click', closeContentModal);
 
-    const filter = contentFilter.value;
-    let filteredContent = userContent.filter((item) => item.userId === currentUser.id);
+  if (contentFilter) {
+    contentFilter.addEventListener('change', () => renderContentGrid(contentFilter.value));
+  }
 
-    if (filter !== 'all') {
-        filteredContent = filteredContent.filter((item) => item.type === filter);
-    }
-
-    displayContent(filteredContent);
-}
-
-// ====================== RENDERIZADO DE CONTENIDO ======================
-
-function displayContent(contentItems) {
-    if (!contentGrid) return;
-
-    contentGrid.innerHTML = '';
-
-    if (!contentItems || contentItems.length === 0) {
-        contentGrid.innerHTML = `
-            <div class="no-content">
-                <i class="fas fa-inbox" style="font-size: 48px; color: var(--muted); margin-bottom: 15px;"></i>
-                <h3>No hay contenido</h3>
-                <p>Comienza agregando tu primer contenido usando los botones de arriba.</p>
-            </div>
-        `;
-        return;
-    }
-
-    contentItems.forEach((item) => {
-        const contentCard = createContentCard(item);
-        contentGrid.appendChild(contentCard);
+  if (contentFileInput && fileInputLabel && fileNameLabel) {
+    contentFileInput.addEventListener('change', function () {
+      if (this.files.length > 0) {
+        fileInputLabel.classList.add('has-file');
+        fileNameLabel.textContent = this.files[0].name;
+      } else {
+        fileInputLabel.classList.remove('has-file');
+        fileNameLabel.textContent = '';
+      }
     });
+  }
+
+  if (contentForm) {
+    contentForm.addEventListener('submit', handleSaveContent);
+  }
 }
 
-function createContentCard(item) {
-    const card = document.createElement('div');
-    card.className = 'content-card';
+function openContentModal(type, item = null) {
+  if (!contentModal) return;
 
-    let mediaHTML = '';
-    const description =
-        item.description && item.description.length > 100
-            ? `${item.description.substring(0, 100)}...`
-            : item.description || '';
+  contentForm.reset();
+  if (fileInputLabel) fileInputLabel.classList.remove('has-file');
+  if (fileNameLabel) fileNameLabel.textContent = '';
 
-    switch (item.type) {
-        case 'video':
-            mediaHTML = `
-                <div class="content-media">
-                    <video controls>
-                        <source src="${item.url}" type="video/mp4">
-                        Tu navegador no soporta video.
-                    </video>
-                </div>
-            `;
-            break;
-        case 'audio':
-            mediaHTML = `
-                <div class="content-media audio">
-                    <i class="fas fa-music"></i>
-                </div>
-            `;
-            break;
-        case 'image':
-            mediaHTML = `
-                <div class="content-media">
-                    <img src="${item.url}" alt="${item.title}">
-                </div>
-            `;
-            break;
-        case 'phrase':
-            mediaHTML = `
-                <div class="content-media phrase">
-                    <i class="fas fa-quote-left"></i>
-                </div>
-            `;
-            break;
-        default:
-            mediaHTML = '';
-            break;
+  contentTypeInput.value = type;
+  contentIdInput.value = item ? item.id : '';
+
+  // Mostrar/ocultar campos según tipo
+  if (type === 'phrase') {
+    phraseFields.style.display = 'block';
+    fileInputGroup.style.display = 'none';
+  } else {
+    phraseFields.style.display = 'none';
+    fileInputGroup.style.display = 'block';
+  }
+
+  if (item) {
+    modalTitleEl.textContent = 'Editar ' + getTypeLabel(type);
+    contentTitleInput.value = item.title || '';
+    contentDescriptionInput.value = item.description || '';
+    contentTagsInput.value = (item.tags || []).join(', ');
+    contentAuthorInput.value = item.author || '';
+  } else {
+    modalTitleEl.textContent = 'Agregar ' + getTypeLabel(type);
+  }
+
+  contentModal.classList.add('active');
+}
+
+function closeContentModal() {
+  if (contentModal) contentModal.classList.remove('active');
+}
+
+function getTypeLabel(type) {
+  switch (type) {
+    case 'video': return 'Video';
+    case 'audio': return 'Audio';
+    case 'image': return 'Imagen';
+    case 'phrase': return 'Frase';
+    default: return 'Contenido';
+  }
+}
+
+async function fetchAndRenderContent() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('content')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error cargando contenido:', error);
+      return;
     }
 
-    const tagsHTML = (item.tags || [])
-        .map((tag) => `<span class="content-tag">${tag}</span>`)
-        .join('');
-
-    card.innerHTML = `
-        ${mediaHTML}
-        <div class="content-info">
-            <div class="content-title">${item.title || ''}</div>
-            <div class="content-description">${description || ''}</div>
-            <div class="content-tags">
-                ${tagsHTML}
-            </div>
-            <div class="content-actions">
-                <button class="content-action-btn btn-edit" onclick="editContent('${item.id}')">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button class="content-action-btn btn-delete" onclick="deleteContent('${item.id}')">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-            </div>
-        </div>
-    `;
-
-    return card;
+    creatorContent = data || [];
+    updateStats();
+    renderContentGrid(contentFilter?.value || 'all');
+  } catch (err) {
+    console.error(err);
+  }
 }
-
-// ====================== ESTADÍSTICAS ======================
 
 function updateStats() {
-    if (!currentUser) return;
+  const total = creatorContent.length;
+  const videos = creatorContent.filter(c => c.type === 'video').length;
+  const audios = creatorContent.filter(c => c.type === 'audio').length;
+  const images = creatorContent.filter(c => c.type === 'image').length;
 
-    const userContentItems = userContent.filter((item) => item.userId === currentUser.id);
-
-    const totalContentEl = document.getElementById('totalContent');
-    const totalVideosEl = document.getElementById('totalVideos');
-    const totalAudiosEl = document.getElementById('totalAudios');
-    const totalImagesEl = document.getElementById('totalImages');
-
-    if (totalContentEl) totalContentEl.textContent = userContentItems.length;
-    if (totalVideosEl) totalVideosEl.textContent = userContentItems.filter((i) => i.type === 'video').length;
-    if (totalAudiosEl) totalAudiosEl.textContent = userContentItems.filter((i) => i.type === 'audio').length;
-    if (totalImagesEl) totalImagesEl.textContent = userContentItems.filter((i) => i.type === 'image').length;
+  if (totalContentEl) totalContentEl.textContent = total;
+  if (totalVideosEl) totalVideosEl.textContent = videos;
+  if (totalAudiosEl) totalAudiosEl.textContent = audios;
+  if (totalImagesEl) totalImagesEl.textContent = images;
 }
 
-// ====================== MODAL DE CONTENIDO ======================
+function renderContentGrid(filter) {
+  if (!contentGrid) return;
+  contentGrid.innerHTML = '';
 
-function showContentModal(type, contentId = null) {
-    currentEditingId = contentId;
+  const items = filter === 'all'
+    ? creatorContent
+    : creatorContent.filter(c => c.type === filter);
 
-    if (contentTypeInput) contentTypeInput.value = type;
-    if (modalTitle) {
-        modalTitle.textContent = contentId
-            ? 'Editar Contenido'
-            : `Agregar ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+  if (!items.length) {
+    contentGrid.innerHTML = '<p style="text-align:center;color:var(--muted);">Aún no has subido contenido.</p>';
+    return;
+  }
+
+  items.forEach(item => {
+    const card = document.createElement('article');
+    card.className = 'dashboard-card';
+
+    const tagsHtml = (item.tags || [])
+      .map(t => `<span class="tag">${t}</span>`)
+      .join('');
+
+    let mediaHtml = '';
+    if (item.type === 'video') {
+      mediaHtml = `
+        <div class="dashboard-media">
+          <video controls preload="metadata">
+            <source src="${item.url}" type="video/mp4">
+            Tu navegador no soporta video.
+          </video>
+        </div>`;
+    } else if (item.type === 'audio') {
+      mediaHtml = `
+        <div class="dashboard-media audio">
+          <audio controls preload="metadata">
+            <source src="${item.url}" type="audio/mpeg">
+            Tu navegador no soporta audio.
+          </audio>
+        </div>`;
+    } else if (item.type === 'image') {
+      mediaHtml = `
+        <div class="dashboard-media">
+          <img src="${item.url}" alt="${item.title || ''}">
+        </div>`;
+    } else if (item.type === 'phrase') {
+      mediaHtml = `
+        <div class="dashboard-phrase">
+          <p class="phrase-text">"${item.description || ''}"</p>
+          ${item.author ? `<p class="phrase-author">- ${item.author}</p>` : ''}
+        </div>`;
     }
 
-    if (type === 'phrase') {
-        if (fileInputGroup) fileInputGroup.style.display = 'none';
-        if (phraseFields) phraseFields.style.display = 'block';
-    } else {
-        if (fileInputGroup) fileInputGroup.style.display = 'block';
-        if (phraseFields) phraseFields.style.display = 'none';
+    card.innerHTML = `
+      <div class="dashboard-card-header">
+        <h3>${item.title || '(Sin título)'}</h3>
+        <span class="type-pill type-${item.type}">${getTypeLabel(item.type)}</span>
+      </div>
+      ${mediaHtml}
+      <div class="dashboard-card-body">
+        ${item.type !== 'phrase' && item.description ? `<p class="card-desc">${item.description}</p>` : ''}
+        <div class="tags">${tagsHtml}</div>
+        <div class="card-actions">
+          <button class="btn-sm" data-action="edit">Editar</button>
+          <button class="btn-sm btn-danger" data-action="delete">Eliminar</button>
+        </div>
+      </div>
+    `;
 
-        const accept =
-            type === 'video' ? 'video/mp4' :
-            type === 'audio' ? 'audio/mpeg' :
-            'image/*';
+    const editBtn = card.querySelector('[data-action="edit"]');
+    const deleteBtn = card.querySelector('[data-action="delete"]');
 
-        const labelText =
-            type === 'video' ? 'Seleccionar video MP4' :
-            type === 'audio' ? 'Seleccionar audio MP3' :
-            'Seleccionar imagen';
-
-        if (contentFileInput) contentFileInput.setAttribute('accept', accept);
-        if (fileInputLabel) {
-            const span = fileInputLabel.querySelector('span');
-            if (span) span.textContent = labelText;
-        }
+    if (editBtn) {
+      editBtn.addEventListener('click', () => openContentModal(item.type, item));
+    }
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => deleteContent(item.id));
     }
 
-    // Cargar datos si estamos editando
-    if (contentId) {
-        const item = userContent.find((c) => c.id === contentId);
-        if (item) {
-            if (contentTitleInput) contentTitleInput.value = item.title || '';
-            if (contentDescriptionInput) contentDescriptionInput.value = item.description || '';
-            if (contentTagsInput) contentTagsInput.value = (item.tags || []).join(', ');
-
-            if (type === 'phrase' && contentAuthorInput) {
-                contentAuthorInput.value = item.author || '';
-            }
-        }
-    } else {
-        // Limpiar formulario
-        if (contentForm) contentForm.reset();
-        if (fileNameSpan) fileNameSpan.textContent = '';
-        if (fileInputLabel) fileInputLabel.classList.remove('has-file');
-    }
-
-    if (contentModal) contentModal.classList.add('active');
+    contentGrid.appendChild(card);
+  });
 }
 
-function hideContentModal() {
-    if (contentModal) contentModal.classList.remove('active');
-    currentEditingId = null;
-}
+async function handleSaveContent(e) {
+  e.preventDefault();
 
-function handleFileSelect(e) {
-    const file = e.target.files[0];
+  const type = contentTypeInput.value;
+  const id = contentIdInput.value || null;
 
-    if (fileNameSpan) {
-        fileNameSpan.textContent = file ? file.name : '';
+  const title = contentTitleInput.value.trim();
+  const description = contentDescriptionInput.value.trim();
+  const tags = contentTagsInput.value
+    .split(',')
+    .map(t => t.trim())
+    .filter(Boolean);
+  const author = contentAuthorInput.value.trim();
+  const file = contentFileInput.files[0];
+
+  if (!title || !description) {
+    alert('Completa al menos título y descripción.');
+    return;
+  }
+
+  // Subir archivo a Storage si aplica
+  let url = null;
+  if (type !== 'phrase') {
+    if (!id && !file) {
+      alert('Selecciona un archivo para subir.');
+      return;
     }
-
-    if (fileInputLabel) {
-        if (file) {
-            fileInputLabel.classList.add('has-file');
-        } else {
-            fileInputLabel.classList.remove('has-file');
-        }
-    }
-}
-
-// ====================== CREAR / ACTUALIZAR CONTENIDO ======================
-
-function handleContentSubmit(e) {
-    e.preventDefault();
-
-    const type = contentTypeInput?.value;
-    const title = contentTitleInput?.value.trim();
-    const description = contentDescriptionInput?.value.trim();
-    const tags = (contentTagsInput?.value || '')
-        .split(',')
-        .map((t) => t.trim())
-        .filter((t) => t);
-    const file = contentFileInput?.files[0];
-
-    if (!title || !description) {
-        alert('Por favor completa todos los campos obligatorios');
-        return;
-    }
-
-    if (type !== 'phrase' && !file && !currentEditingId) {
-        alert('Por favor selecciona un archivo');
-        return;
-    }
-
-    const contentData = {
-        title,
-        description,
-        tags,
-        type,
-    };
-
-    if (type === 'phrase') {
-        const author = contentAuthorInput?.value.trim();
-        if (!author) {
-            alert('Por favor ingresa el autor de la frase');
-            return;
-        }
-        contentData.author = author;
-        contentData.text = description;
-    }
-
-    if (currentEditingId) {
-        updateContent(currentEditingId, contentData, file);
-    } else {
-        createContent(contentData, file);
-    }
-}
-
-function createContent(contentData, file) {
-    let url = '';
 
     if (file) {
-        // En un entorno real subirías el archivo a un servidor
-        url = URL.createObjectURL(file);
+      url = await uploadFileToStorage(file, type);
+      if (!url) return; // ya mostró error
+    } else if (id) {
+      const existing = creatorContent.find(c => c.id === id);
+      url = existing?.url || null;
     }
+  }
 
-    const newContent = {
-        id: Date.now().toString(),
-        ...contentData,
-        url,
-        userId: currentUser.id,
-        userName: currentUser.name,
-        createdAt: new Date().toISOString(),
+  if (id) {
+    await updateContent({
+      id,
+      type,
+      title,
+      description,
+      tags,
+      author,
+      url
+    });
+  } else {
+    await createContent({
+      type,
+      title,
+      description,
+      tags,
+      author,
+      url
+    });
+  }
+
+  await fetchAndRenderContent();
+  closeContentModal();
+}
+
+// Subir archivo a Supabase Storage (crea un bucket llamado "media" en Supabase)
+async function uploadFileToStorage(file, type) {
+  const bucket = 'media'; // asegúrate de tener un bucket con este nombre
+  const ext = file.name.split('.').pop();
+  const path = `${currentUser.id}/${type}/${Date.now()}.${ext}`;
+
+  const { error } = await supabaseClient
+    .storage
+    .from(bucket)
+    .upload(path, file);
+
+  if (error) {
+    console.error('Error subiendo archivo:', error);
+    alert('No se pudo subir el archivo. Revisa la consola.');
+    return null;
+  }
+
+  const { data } = supabaseClient.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function createContent(data) {
+  try {
+    const payload = {
+      user_id: currentUser.id,
+      type: data.type,
+      title: data.title,
+      description: data.description,
+      tags: data.tags,
+      url: data.url,
+      author: data.type === 'phrase' ? data.author : null
     };
 
-    userContent.push(newContent);
-    localStorage.setItem('legado_content', JSON.stringify(userContent));
+    const { error } = await supabaseClient
+      .from('content')
+      .insert(payload);
 
-    hideContentModal();
-    loadUserContent();
-    updateStats();
-
-    alert('¡Contenido agregado exitosamente!');
+    if (error) {
+      console.error('Error insertando contenido:', error);
+      alert('No se pudo guardar el contenido en la base de datos.');
+    }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
-function updateContent(contentId, contentData, file) {
-    const index = userContent.findIndex((item) => item.id === contentId);
-    if (index === -1) return;
-
-    let url = userContent[index].url;
-
-    if (file) {
-        url = URL.createObjectURL(file);
-    }
-
-    userContent[index] = {
-        ...userContent[index],
-        ...contentData,
-        url,
-        updatedAt: new Date().toISOString(),
+async function updateContent(data) {
+  try {
+    const payload = {
+      title: data.title,
+      description: data.description,
+      tags: data.tags,
+      url: data.url,
+      author: data.type === 'phrase' ? data.author : null
     };
 
-    localStorage.setItem('legado_content', JSON.stringify(userContent));
+    const { error } = await supabaseClient
+      .from('content')
+      .update(payload)
+      .eq('id', data.id);
 
-    hideContentModal();
-    loadUserContent();
-    updateStats();
-
-    alert('¡Contenido actualizado exitosamente!');
-}
-
-// ====================== EDITAR / ELIMINAR (GLOBALES PARA onclick) ======================
-
-function editContent(contentId) {
-    const item = userContent.find((c) => c.id === contentId);
-    if (!item) {
-        alert('Contenido no encontrado');
-        return;
+    if (error) {
+      console.error('Error actualizando contenido:', error);
+      alert('No se pudo actualizar el contenido.');
     }
-    showContentModal(item.type, contentId);
+  } catch (err) {
+    console.error(err);
+  }
 }
 
-function deleteContent(contentId) {
-    if (!confirm('¿Estás seguro de que quieres eliminar este contenido? Esta acción no se puede deshacer.')) {
-        return;
+async function deleteContent(id) {
+  if (!confirm('¿Seguro que quieres eliminar este contenido?')) return;
+
+  try {
+    const { error } = await supabaseClient
+      .from('content')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error eliminando contenido:', error);
+      alert('No se pudo eliminar el contenido.');
+      return;
     }
 
-    userContent = userContent.filter((item) => item.id !== contentId);
-    localStorage.setItem('legado_content', JSON.stringify(userContent));
-
-    loadUserContent();
-    updateStats();
-
-    alert('¡Contenido eliminado exitosamente!');
+    creatorContent = creatorContent.filter(c => c.id !== id);
+    renderContentGrid(contentFilter?.value || 'all');
+  } catch (err) {
+    console.error(err);
+  }
 }
-
-// Hacerlas accesibles desde HTML inline
-window.editContent = editContent;
-window.deleteContent = deleteContent;
-
-// ====================== LOGOUT ======================
-
-function handleLogout() {
-    localStorage.removeItem('legado_currentUser');
-    window.location.href = 'index.html';
-}
-
-// ====================== ARRANQUE ======================
-
-document.addEventListener('DOMContentLoaded', initDashboard);

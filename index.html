@@ -1008,6 +1008,9 @@
       <a href="login.html#login" class="btn btn-login" id="loginBtn">Iniciar Sesión</a>
       <a href="login.html#register" class="btn btn-register" id="registerBtn">Registrarse</a>
     </div>
+    <button class="btn btn-login" id="creatorDashboardBtn" style="display:none;">
+        Panel Creador
+    </button>
 
     <button class="add-content-btn" id="addContentBtn" style="display: none;">
       <i class="fas fa-plus"></i>
@@ -1465,9 +1468,11 @@
 </footer>
 
 <!-- Supabase (si luego quieres usarlo aquí) -->
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<!-- Lógica principal de la página (te la paso en el siguiente archivo JS) -->
+<!-- Cliente Supabase configurado (también pone window.supabase) -->
+<script type="module" src="js/supabaseClient.js"></script>
+<!-- Lógica principal de la página -->
 <script src="js/main.js"></script>
+
 
 </body>
 </html>
