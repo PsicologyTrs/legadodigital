@@ -1,6 +1,9 @@
 // Sistema de Pago - payment.js
 'use strict';
 
+// ============ CONFIGURACIÓN WOMPI (link estático) ============
+const WOMPI_PAYMENT_LINK = 'https://checkout.wompi.co/l/test_bXBSfQ';
+
 // ====================== ELEMENTOS DEL DOM ======================
 
 const paymentForm = document.getElementById('paymentForm');
@@ -26,7 +29,7 @@ function initPayment() {
 
     if (!isCreatorUser) {
         // Si no es creador, redirigir al login
-        window.location.href = 'login.html';
+        window.location.href = 'login.html#login';
         return;
     }
 
@@ -56,15 +59,17 @@ function prefillUserData() {
 
     const fullNameInput = document.getElementById('fullName');
     const emailInput = document.getElementById('email');
+    const accountEmailSpan = document.getElementById('accountEmail');
 
     if (fullNameInput) fullNameInput.value = currentUser.name || '';
     if (emailInput) emailInput.value = currentUser.email || '';
+    if (accountEmailSpan) accountEmailSpan.textContent = currentUser.email || '';
 }
 
 // ====================== EVENT LISTENERS ======================
 
 function setupEventListeners() {
-    // Selección de método de pago
+    // Selección de método de pago (solo afecta al estado local)
     methodCards.forEach((card) => {
         card.addEventListener('click', () => {
             methodCards.forEach((c) => c.classList.remove('active'));
@@ -81,7 +86,8 @@ function setupEventListeners() {
 }
 
 function updatePaymentForm() {
-    // Por ahora solo hay PSE, pero aquí podrías cambiar el formulario
+    // Por ahora solo usamos un link de Wompi para todo,
+    // pero dejamos el log por si luego quieres personalizar.
     console.log('Método de pago seleccionado:', currentPaymentMethod);
 }
 
@@ -116,7 +122,7 @@ function validateForm() {
     return true;
 }
 
-// ====================== PAGO ======================
+// ====================== PAGO (REDIRECCIÓN A WOMPI) ======================
 
 async function handlePayment(e) {
     e.preventDefault();
@@ -125,79 +131,36 @@ async function handlePayment(e) {
         return;
     }
 
+    if (!currentUser) {
+        showPaymentMessage('Debes iniciar sesión antes de pagar.', 'error');
+        return;
+    }
+
     if (payButton) {
         payButton.classList.add('loading');
         payButton.disabled = true;
     }
 
-    try {
-        await processPSEPayment();
+    // Guardar intención de pago (por si luego quieres usarla)
+    localStorage.setItem(
+        'legado_lastPaymentIntent',
+        JSON.stringify({
+            userId: currentUser.id,
+            email: currentUser.email,
+            method: currentPaymentMethod,
+            createdAt: new Date().toISOString(),
+        })
+    );
 
-        updateUserAsVerified();
+    showPaymentMessage(
+        'Te redirigiremos a Wompi para completar el pago. Usa el MISMO correo que ves arriba.',
+        'info'
+    );
 
-        showPaymentMessage(
-            '¡Pago exitoso! Ahora eres un creador verificado. Redirigiendo al panel...',
-            'success'
-        );
-
-        setTimeout(() => {
-            window.location.href = 'dashboard-creator.html';
-        }, 2000);
-    } catch (error) {
-        showPaymentMessage('Error en el pago: ' + error.message, 'error');
-        if (payButton) {
-            payButton.classList.remove('loading');
-            payButton.disabled = false;
-        }
-    }
-}
-
-// Simular procesamiento de pago PSE
-function processPSEPayment() {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            // 90% éxito
-            const success = Math.random() > 0.1;
-
-            if (success) {
-                resolve({
-                    transactionId: 'TXN_' + Date.now(),
-                    amount: 15000,
-                    currency: 'COP',
-                    status: 'approved',
-                    method: 'pse',
-                });
-            } else {
-                reject(
-                    new Error(
-                        'La transacción fue rechazada por el banco. Por favor intenta con otro método de pago.'
-                    )
-                );
-            }
-        }, 3000);
-    });
-}
-
-// ====================== ACTUALIZAR USUARIO ======================
-
-function updateUserAsVerified() {
-    if (!currentUser) return;
-
-    currentUser.hasPaid = true;
-    currentUser.creatorSince = new Date().toISOString();
-    currentUser.paymentMethod = currentPaymentMethod || 'pse';
-
-    // Actualizar currentUser en localStorage
-    localStorage.setItem('legado_currentUser', JSON.stringify(currentUser));
-
-    // Actualizar en la lista de usuarios
-    const users = JSON.parse(localStorage.getItem('legado_users')) || [];
-    const index = users.findIndex((u) => u.id === currentUser.id);
-
-    if (index !== -1) {
-        users[index] = currentUser;
-        localStorage.setItem('legado_users', JSON.stringify(users));
-    }
+    // Pequeña pausa visual y luego redirigir al link de Wompi
+    setTimeout(() => {
+        window.location.href = WOMPI_PAYMENT_LINK;
+    }, 800);
 }
 
 // ====================== MENSAJES ======================

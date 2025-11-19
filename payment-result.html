@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Resultado de pago - LEGADO DIGITAL</title>
+
+  <link href="css/style.css" rel="stylesheet" />
+  <style>
+    .result-box {
+      max-width: 480px;
+      margin: 120px auto 40px;
+      padding: 24px;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .result-status-ok   { color: #1e8449; }
+    .result-status-error{ color: #c0392b; }
+    .result-box a {
+      display:inline-block;
+      margin-top:14px;
+      text-decoration:none;
+      color:#b8863b;
+      font-weight:600;
+    }
+  </style>
+</head>
+<body>
+  <nav class="top-nav">
+    <a href="index.html" class="nav-brand">LEGADO DIGITAL</a>
+  </nav>
+
+  <main>
+    <div class="result-box" id="resultBox">
+      <p>Verificando el estado de tu pago...</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    © 2025 Legado Digital · Proyecto Historia y Patrimonio · Universidad del Magdalena
+  </footer>
+
+  <!-- Supabase -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+
+  <!-- Lógica de verificación Wompi + Supabase -->
+  <script src="js/payment-result.js"></script>
+</body>
+</html>
