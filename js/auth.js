@@ -1,4 +1,5 @@
 // auth.js - Autenticación con Supabase + tabla profiles
+
 (function () {
   'use strict';
 
@@ -6,42 +7,45 @@
   const SUPABASE_ANON_KEY =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmd29scmFjb3ZzcGxhenJtaGR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1MDIzNDIsImV4cCI6MjA3OTA3ODM0Mn0.chvbMlvsSJRhHP-nYkezCcSXXq_wnO74kfpL6aXV-0U';
 
-  // Verificar que la librería de Supabase esté disponible
-  if (typeof supabase === 'undefined') {
+  let supabaseClient = null;
+
+  // 1) Intentar usar un cliente global si ya existe (por ejemplo, desde supabaseClient.js)
+  if (window.supabaseClient) {
+    supabaseClient = window.supabaseClient;
+  } else if (typeof supabase !== 'undefined') {
+    // 2) Si no existe, crearlo desde la librería global (CDN)
+    const { createClient } = supabase;
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabaseClient = supabaseClient;
+  } else {
     console.error(
-      'Supabase JS no está cargado. Asegúrate de tener ' +
-      '<script src="https://unpkg.com/@supabase/supabase-js@2"></script> antes de auth.js'
+      'Supabase JS no está cargado. Asegúrate de tener:\n' +
+        '<script src="https://unpkg.com/@supabase/supabase-js@2"></script>\n' +
+        'antes de auth.js en login.html'
     );
     return;
   }
 
-  const { createClient } = supabase;
-  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // Elementos del DOM
+  // --------- ELEMENTOS DEL DOM ----------
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
   const loginMessage = document.getElementById('loginMessage');
   const registerMessage = document.getElementById('registerMessage');
   const showRegister = document.getElementById('showRegister');
   const showLogin = document.getElementById('showLogin');
-  const loginCard = document.querySelector('.login-card'); // primer card (login)
+
+  // Primer .login-card que NO es la de registro
+  const loginCard = document.querySelector('.login-card:not(.register-card)');
   const registerCard = document.getElementById('registerCard');
 
-  // Usuario actual almacenado en localStorage (si existe)
-  let currentUser = JSON.parse(localStorage.getItem('legado_currentUser') || 'null');
+  let currentUser =
+    JSON.parse(localStorage.getItem('legado_currentUser')) || null;
 
   // ---------- INICIALIZAR ----------
   function initAuth() {
     setupEventListeners();
-
-    // Si ya hay usuario logueado, redirigimos de una
-    if (checkExistingSession()) {
-      return;
-    }
-
-    // Mostrar login o registro según el hash (#login / #register)
-    handleInitialView();
+    applyHashView(); // mostrar login o registro según #login / #register
+    // IMPORTANTE: Ya NO redirigimos automáticamente si hay currentUser
   }
 
   function setupEventListeners() {
@@ -52,40 +56,31 @@
       registerForm.addEventListener('submit', handleRegister);
     }
     if (showRegister) {
-      showRegister.addEventListener('click', function (e) {
+      showRegister.addEventListener('click', (e) => {
         e.preventDefault();
-        window.location.hash = '#register';
         showRegisterForm();
+        window.location.hash = '#register';
       });
     }
     if (showLogin) {
-      showLogin.addEventListener('click', function (e) {
+      showLogin.addEventListener('click', (e) => {
         e.preventDefault();
-        window.location.hash = '#login';
         showLoginForm();
+        window.location.hash = '#login';
       });
     }
 
-    // Si cambian el hash manualmente (#login / #register)
-    window.addEventListener('hashchange', handleInitialView);
+    // Por si cambias el hash manualmente (o vienes desde index con #register)
+    window.addEventListener('hashchange', applyHashView);
   }
 
-  function checkExistingSession() {
-    if (currentUser) {
-      redirectAfterLogin();
-      return true;
-    }
-    return false;
-  }
-
-  // Muestra el card correcto en función del hash actual
-  function handleInitialView() {
-    if (!loginCard || !registerCard) return;
-
+  // Muestra la tarjeta correcta según el hash (#login o #register)
+  function applyHashView() {
     const hash = window.location.hash;
     if (hash === '#register') {
       showRegisterForm();
     } else {
+      // Por defecto: login
       showLoginForm();
     }
   }
@@ -108,22 +103,27 @@
 
     const name = document.getElementById('registerName').value.trim();
     const email = document.getElementById('registerEmail').value.trim();
-    const password = document.getElementById('registerPassword').value.trim();
-    const userTypeInput = document.querySelector(
+    const password = document
+      .getElementById('registerPassword')
+      .value.trim();
+    const userType = document.querySelector(
       'input[name="registerUserType"]:checked'
-    );
-    const userType = userTypeInput ? userTypeInput.value : null;
+    ).value;
 
-    if (!name || !email || !password || !userType) {
-      showMessage(registerMessage, 'Por favor completa todos los campos', 'error');
+    if (!name || !email || !password) {
+      showMessage(
+        registerMessage,
+        'Por favor completa todos los campos',
+        'error'
+      );
       return;
     }
 
     try {
       // 1) Crear usuario en Supabase Auth
       const { data, error } = await supabaseClient.auth.signUp({
-        email: email,
-        password: password
+        email,
+        password
       });
 
       if (error) {
@@ -153,7 +153,7 @@
         full_name: name,
         user_type: userType, // 'consumer' o 'creator'
         is_creator: userType === 'creator',
-        has_paid: userType === 'consumer', // consumidor no paga cuota de creador
+        has_paid: userType === 'consumer', // consumidor no paga
         creator_since: null,
         payment_method: null,
         created_at: new Date().toISOString()
@@ -176,8 +176,8 @@
       // 3) Guardar info mínima en localStorage para que el resto del sitio funcione
       currentUser = {
         id: user.id,
-        name: name,
-        email: email,
+        name,
+        email,
         type: userType,
         isCreator: profile.is_creator,
         hasPaid: profile.has_paid,
@@ -196,7 +196,9 @@
         'success'
       );
 
-      setTimeout(redirectAfterLogin, 1000);
+      setTimeout(() => {
+        redirectAfterLogin();
+      }, 1000);
     } catch (err) {
       console.error(err);
       showMessage(
@@ -213,21 +215,24 @@
 
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
-    const userTypeInput = document.querySelector(
+    const userType = document.querySelector(
       'input[name="userType"]:checked'
-    );
-    const userType = userTypeInput ? userTypeInput.value : null;
+    ).value;
 
-    if (!email || !password || !userType) {
-      showMessage(loginMessage, 'Por favor completa todos los campos', 'error');
+    if (!email || !password) {
+      showMessage(
+        loginMessage,
+        'Por favor completa todos los campos',
+        'error'
+      );
       return;
     }
 
     try {
       // 1) Login en Supabase Auth
       const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
+        email,
+        password
       });
 
       if (error) {
@@ -267,9 +272,10 @@
         return;
       }
 
-      // 3) Validar tipo de usuario seleccionado vs el guardado
+      // 3) Validar tipo de usuario seleccionado vs guardado
       if (profile.user_type !== userType) {
-        const tipo = profile.user_type === 'creator' ? 'creador' : 'consumidor';
+        const tipo =
+          profile.user_type === 'creator' ? 'creador' : 'consumidor';
         showMessage(
           loginMessage,
           `Este correo está registrado como ${tipo}`,
@@ -301,7 +307,9 @@
         'success'
       );
 
-      setTimeout(redirectAfterLogin, 1000);
+      setTimeout(() => {
+        redirectAfterLogin();
+      }, 1000);
     } catch (err) {
       console.error(err);
       showMessage(
@@ -333,11 +341,7 @@
 
   // ---------- UTIL: MENSAJES ----------
   function showMessage(element, text, type) {
-    if (!element) {
-      console.warn('Elemento de mensaje no encontrado para:', text);
-      return;
-    }
-
+    if (!element) return;
     element.textContent = text;
     element.className = `message ${type}`;
     element.style.display = 'block';
