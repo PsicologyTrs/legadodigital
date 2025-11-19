@@ -8,6 +8,23 @@ let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null
 // Contenido guardado en localStorage (por ahora sigue siendo local para lo que se agrega desde index)
 // Además, más abajo cargamos CONTENIDO REAL de creadores desde Supabase.
 let content = JSON.parse(localStorage.getItem('legado_content')) || [];
+// 🔹 Limpieza de contenido viejo con URLs tipo blob: que ya no existen al recargar
+if (Array.isArray(content) && content.length) {
+  const cleaned = content.filter(item => {
+    if (!item || typeof item !== 'object') return false;
+    if (!item.url) return true;
+    // Si la URL empieza por blob: la descartamos (solo servía en la sesión anterior)
+    return !String(item.url).startsWith('blob:');
+  });
+
+  if (cleaned.length !== content.length) {
+    console.log('[LEGADO] Limpieza de items locales con URL blob: obsoletas');
+    localStorage.setItem('legado_content', JSON.stringify(cleaned));
+  }
+
+  content = cleaned;
+}
+
 
 // Cliente de Supabase creado en supabaseClient.js
 const supabaseClient = window.supabaseClient || null;
@@ -156,14 +173,13 @@ function initApp() {
 }
 
 // ========== CARGA DE CONTENIDO DESDE SUPABASE ==========
-
 async function fetchRemoteContent() {
   try {
     // Ajusta 'content' si tu tabla tiene otro nombre
     const { data, error } = await supabaseClient
       .from('content')
       .select('*')
-      .order('created_at', { ascending: false }); // 🔥 Más reciente primero
+      .order('created_at', { ascending: false }); // 🔥 más reciente primero en Supabase
 
     if (error) {
       console.error('Error cargando contenido remoto (Supabase):', error);
@@ -185,14 +201,15 @@ async function fetchRemoteContent() {
       }
 
       const base = {
-        id: String(row.id),
+        // 👇 prefijo para no chocar con IDs locales ("1", "2", etc.)
+        id: `supabase-${row.id}`,
         type: row.type,
         url: row.url || '',
         tags,
         userId: row.user_id || row.userId || 'creator',
         userName: row.user_name || row.userName || row.author || 'Creador',
         createdAt: row.created_at || row.createdAt || new Date().toISOString(),
-        source: 'supabase' // 👈 Marcamos como remoto para no editar desde index
+        source: 'supabase'
       };
 
       if (row.type === 'phrase') {
@@ -211,20 +228,18 @@ async function fetchRemoteContent() {
       }
     });
 
-    // Evitar duplicados por id (por si ya hay algo en local con el mismo id)
-    const existingIds = new Set(content.map(c => String(c.id)));
-    mapped.forEach(item => {
-      if (!existingIds.has(String(item.id))) {
-        content.push(item);
-      }
-    });
+    console.log('[LEGADO] Contenido remoto cargado:', mapped);
 
-    // No guardamos en localStorage el contenido remoto para que siempre sea "vivo"
-    loadContent(); // Re-pintar con lo remoto incluido
+    // Mezclamos el contenido remoto con el local (no se guarda en localStorage)
+    content = [...content, ...mapped];
+
+    // Y repintamos todo (loadContent ya ordena por createdAt desc)
+    loadContent();
   } catch (err) {
     console.error('Error inesperado al cargar contenido remoto:', err);
   }
 }
+
 
 // ========== CONFIGURAR INPUTS DE ARCHIVO ==========
 
