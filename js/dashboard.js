@@ -1,6 +1,7 @@
 // js/dashboard.js
 // Panel del Creador: usa Supabase para gestionar contenido del usuario
 // js/dashboard.js
+import { supabase } from './supabaseClient.js';
 const supabaseClient = window.supabaseClient || null;
 let currentUser = JSON.parse(localStorage.getItem('legado_currentUser')) || null;
 
@@ -40,6 +41,65 @@ const closeModalBtn = contentModal?.querySelector('.close-modal');
 document.addEventListener('DOMContentLoaded', () => {
   initDashboard();
 });
+// 🔧 Comprimir imagen antes de subir
+function compressImageFile(file, options = {}) {
+  const {
+    maxWidth = 1600,
+    maxHeight = 1600,
+    quality = 0.7, // 0–1 (menor = más compresión)
+  } = options;
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.onload = () => {
+        let { width, height } = img;
+
+        // Mantener proporción pero limitar tamaño máximo
+        if (width > maxWidth || height > maxHeight) {
+          const aspectRatio = width / height;
+
+          if (aspectRatio > 1) {
+            // más ancho que alto
+            width = maxWidth;
+            height = Math.round(maxWidth / aspectRatio);
+          } else {
+            // más alto que ancho
+            height = maxHeight;
+            width = Math.round(maxHeight * aspectRatio);
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Exportar como JPEG comprimido
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              return reject(new Error('No se pudo generar el blob de la imagen'));
+            }
+            resolve(blob);
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+
+      img.onerror = () => reject(new Error('No se pudo cargar la imagen para comprimirla'));
+      img.src = e.target.result;
+    };
+
+    reader.onerror = () => reject(new Error('Error leyendo el archivo de imagen'));
+    reader.readAsDataURL(file);
+  });
+}
 
 async function initDashboard() {
   if (!supabaseClient) {
@@ -317,7 +377,30 @@ async function handleSaveContent(e) {
     }
 
     if (file) {
-      url = await uploadFileToStorage(file, type);
+      let fileToUpload = file;
+
+      // 🔧 Si es imagen, primero la comprimimos/redimensionamos
+      if (type === 'image') {
+        try {
+          const compressedBlob = await compressImageFile(file, {
+            maxWidth: 1600,  // puedes bajar esto si quieres aún menos peso
+            maxHeight: 1600,
+            quality: 0.7     // 0.5 = más compresión, menos calidad
+          });
+
+          const newFileName = file.name.replace(/\.\w+$/, '') + '.jpg';
+          fileToUpload = new File([compressedBlob], newFileName, {
+            type: 'image/jpeg'
+          });
+        } catch (err) {
+          console.error('Error comprimiendo la imagen:', err);
+          alert('No se pudo optimizar la imagen. Intenta con otra imagen o más pequeña.');
+          return;
+        }
+      }
+
+      // 🔼 Subimos el archivo (original para video/audio, comprimido para imagen)
+      url = await uploadFileToStorage(fileToUpload, type);
       if (!url) return; // ya mostró error
     } else if (id) {
       const existing = creatorContent.find(c => c.id === id);
@@ -349,6 +432,7 @@ async function handleSaveContent(e) {
   await fetchAndRenderContent();
   closeContentModal();
 }
+
 
 // Subir archivo a Supabase Storage (crea un bucket llamado "media" en Supabase)
 async function uploadFileToStorage(file, type) {

@@ -395,3 +395,158 @@
         padding: 20px;
     }
 }
+/* ===========================
+   PANEL DEL CREADOR (dashboard.js)
+   =========================== */
+
+/* Tarjetas generadas en js/dashboard.js */
+.dashboard-card {
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Cabecera de la tarjeta */
+.dashboard-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.dashboard-card-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--forest);
+}
+
+/* Píldora de tipo (Video, Audio, Imagen, Frase) */
+.type-pill {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: var(--sand);
+    color: var(--earth);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Contenedor del media */
+.dashboard-media {
+    width: 100%;
+    max-height: 260px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* Imagen / video responsivos dentro del panel */
+.dashboard-media img,
+.dashboard-media video {
+    width: 100%;
+    height: auto;       /* Mantiene proporción */
+    max-height: 260px;  /* Evita que crezcan infinito */
+    object-fit: cover;  /* Se recorta un poquito para que quede bonito */
+    display: block;
+    border-radius: 0;   /* O 10px si quieres esquinas */
+}
+
+/* Audio */
+.dashboard-media.audio {
+    background: linear-gradient(135deg, var(--accent), var(--earth));
+    padding: 15px;
+}
+
+.dashboard-media.audio audio {
+    width: 100%;
+}
+
+/* Frases en el panel */
+.dashboard-phrase {
+    padding: 20px;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(135deg, var(--forest), #2c5535);
+    color: white;
+}
+
+.dashboard-phrase .phrase-text {
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+.dashboard-phrase .phrase-author {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* Cuerpo de la tarjeta */
+.dashboard-card-body {
+    padding: 12px 15px 15px;
+}
+
+.card-desc {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 8px;
+}
+
+/* Etiquetas dentro del panel */
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.tags .tag {
+    background: var(--sand);
+    color: var(--earth);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+}
+
+/* Botones de acción (Editar / Eliminar) */
+.card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.btn-sm {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--sand);
+    color: var(--earth);
+}
+
+.btn-sm:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn-sm.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
