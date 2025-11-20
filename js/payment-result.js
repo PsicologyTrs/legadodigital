@@ -1,3 +1,4 @@
+// js/payment-result.js
 'use strict';
 
 // === CONFIG WOMPI (mismas que en payment.js) ===
@@ -62,55 +63,61 @@ document.addEventListener('DOMContentLoaded', async () => {
       setResult(
         `<h2>Advertencia de validación</h2>
          <p>El monto o la moneda del pago no coinciden con lo esperado.</p>
-         <p>Recibimos: ${(tx.amount_in_cents / 100).toLocaleString('es-CO')} ${tx.currency}</p>
+         <p>Recibimos: ${(tx.amount_in_cents / 100).toLocaleString(
+           'es-CO'
+         )} ${tx.currency}</p>
          <a href="index.html">Volver al inicio</a>`
       );
       return;
     }
 
-    const emailPago = (tx.customer_email || '').toLowerCase();
-
-    if (!emailPago) {
-      setResult(
-        `<h2>No pudimos leer tu correo</h2>
-         <p>La transacción no trae un correo de comprador.</p>
-         <a href="index.html">Volver al inicio</a>`
-      );
-      return;
-    }
+    // 3. Intentar leer el correo del pago (si viene)
+    const rawEmail =
+      tx.customer_email ||
+      tx.customerEmail ||
+      (tx.customer && tx.customer.email) ||
+      '';
+    const emailPago = rawEmail ? rawEmail.toLowerCase() : null;
 
     const currentUser =
       JSON.parse(localStorage.getItem('legado_currentUser')) || null;
 
-    // 3. Sin sesión: guardar el correo y pedir login con ese email
+    // ================== CASO 1: NO HAY SESIÓN ==================
     if (!currentUser) {
-      localStorage.setItem('legado_pendingPaidEmail', emailPago);
+      if (emailPago) {
+        localStorage.setItem('legado_pendingPaidEmail', emailPago);
+      }
 
       setResult(
-        `<h2>Pago recibido ✅</h2>
-         <p>Hiciste un pago para el correo <strong>${emailPago}</strong>.</p>
-         <p>Ahora inicia sesión en Legado Digital con ese mismo correo para activar tu perfil de creador.</p>
+        `<h2>Pago aprobado ✅</h2>
+         <p>Tu pago fue aprobado correctamente.</p>
+         ${
+           emailPago
+             ? `<p>Cuando inicies sesión con <strong>${emailPago}</strong>, activaremos tu perfil de creador.</p>`
+             : `<p>Ahora inicia sesión con el correo que usaste en Wompi para que podamos activar tu perfil de creador.</p>`
+         }
          <a href="login.html#login">Ir a iniciar sesión</a>`,
         true
       );
       return;
     }
 
+    // ================== CASO 2: HAY SESIÓN ==================
     const userEmail = (currentUser.email || '').toLowerCase();
 
-    // 4. El correo del pago y el de la sesión NO coinciden
-    if (userEmail !== emailPago) {
-      setResult(
-        `<h2>Pago con correo diferente</h2>
-         <p>Tu sesión actual es: <strong>${userEmail}</strong></p>
-         <p>Pero el pago fue realizado con: <strong>${emailPago}</strong></p>
-         <p>Inicia sesión con el correo del pago o contáctanos con el comprobante.</p>
-         <a href="login.html#login">Cambiar de cuenta</a>`
+    // Si viene correo del pago y es distinto, solo avisamos en consola,
+    // pero igualmente activamos al usuario actual (como tú querías).
+    if (emailPago && userEmail && emailPago !== userEmail) {
+      console.warn(
+        'El correo del pago no coincide con el de la sesión.',
+        'Sesion:', userEmail,
+        'Pago:', emailPago
       );
-      return;
+      // Podrías mostrar un mensajito suave al usuario si quieres,
+      // pero NO bloqueamos la activación.
     }
 
-    // 5. Actualizar perfil en Supabase
+    // 4. Actualizar perfil en Supabase (usuario actual)
     let updateError = null;
 
     if (supabaseClient) {
@@ -118,7 +125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .from('profiles')
         .update({
           has_paid: true,
-          is_creator: true, // 👈 marca también is_creator
+          is_creator: true,
           payment_method: tx.payment_method_type || 'WOMPI_LINK',
           creator_since: new Date().toISOString(),
         })
@@ -149,7 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // 6. Todo OK: mensaje y redirección al dashboard
+    // 5. Todo OK: mensaje y redirección al dashboard
     setResult(
       `<h2>¡Pago aprobado y cuenta activada! 🎉</h2>
        <p>Tu perfil de creador está listo.</p>
