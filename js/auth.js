@@ -150,6 +150,7 @@
       // 2) Crear perfil en la tabla profiles
       const profile = {
         id: user.id, // FK a auth.users
+        email,       // 👈 guardamos también el correo en profiles
         full_name: name,
         user_type: userType, // 'consumer' o 'creator'
         is_creator: userType === 'creator',
