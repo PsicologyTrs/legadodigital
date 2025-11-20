@@ -7,7 +7,7 @@ const WOMPI_BASE_URL =
     ? 'https://sandbox.wompi.co'
     : 'https://production.wompi.co';
 
-const WOMPI_PUBLIC_KEY = 'pub_test_xxx_TU_LLAVE_PUBLICA_AQUI';
+const WOMPI_PUBLIC_KEY = 'pub_test_50CMTR6cEbLADRwxltn4fBGFFohdGyMG';
 const CREATOR_PRICE_IN_CENTS = 1500000; // 15.000 COP
 
 const supabaseClient = window.supabaseClient || null;
@@ -118,6 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .from('profiles')
         .update({
           has_paid: true,
+          is_creator: true, // 👈 marca también is_creator
           payment_method: tx.payment_method_type || 'WOMPI_LINK',
           creator_since: new Date().toISOString(),
         })
@@ -129,6 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!error && data) {
         currentUser.hasPaid = true;
+        currentUser.isCreator = true;
         currentUser.paymentMethod = data.payment_method;
         currentUser.creatorSince = data.creator_since;
         localStorage.setItem('legado_currentUser', JSON.stringify(currentUser));
