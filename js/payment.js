@@ -2,7 +2,7 @@
 'use strict';
 
 // ============ CONFIGURACIÓN WOMPI (link estático) ============
-const WOMPI_PAYMENT_LINK = 'https://checkout.wompi.co/l/test_fcyj49';
+const WOMPI_PAYMENT_LINK = 'https://checkout.wompi.co/l/sdQvwk';
 
 // ====================== ELEMENTOS DEL DOM ======================
 
