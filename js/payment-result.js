@@ -1,14 +1,17 @@
 // js/payment-result.js
 'use strict';
 
-// === CONFIG WOMPI (mismas que en payment.js) ===
-const WOMPI_ENV = 'sandbox';
-const WOMPI_BASE_URL =
-  WOMPI_ENV === 'sandbox'
-    ? 'https://sandbox.wompi.co'
-    : 'https://production.wompi.co';
+// === CONFIG WOMPI ===
+// Usa llaves distintas para sandbox y producción
+const WOMPI_PUBLIC_KEY_SANDBOX = 'pub_test_50CMTR6cEbLADRwxltn4fBGFFohdGyMG';
+// 👇 Reemplaza esto por TU llave pública de producción de Wompi
+const WOMPI_PUBLIC_KEY_PROD = 'pub_prod_beZHMTGyVNCWgutsruNzD4U35qCGqlhR';
 
-const WOMPI_PUBLIC_KEY = 'pub_test_50CMTR6cEbLADRwxltn4fBGFFohdGyMG';
+// Valores que se irán ajustando según el ?env= de la URL
+let WOMPI_BASE_URL = 'https://sandbox.wompi.co';
+let WOMPI_PUBLIC_KEY = WOMPI_PUBLIC_KEY_SANDBOX;
+
+// Monto esperado (en centavos)
 const CREATOR_PRICE_IN_CENTS = 1500000; // 15.000 COP
 
 const supabaseClient = window.supabaseClient || null;
@@ -25,6 +28,20 @@ function setResult(html, isOk = false) {
 document.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   const txId = params.get('id');
+  const envParam = params.get('env'); // suele venir "prod" o "test/sandbox"
+
+  // 1) Ajustar entorno según ?env
+  if (envParam === 'prod' || envParam === 'production') {
+    // PRODUCCIÓN
+    WOMPI_BASE_URL = 'https://production.wompi.co';
+    WOMPI_PUBLIC_KEY = WOMPI_PUBLIC_KEY_PROD;
+    console.log('[WOMPI] Modo PRODUCCIÓN');
+  } else {
+    // SANDBOX (por defecto)
+    WOMPI_BASE_URL = 'https://sandbox.wompi.co';
+    WOMPI_PUBLIC_KEY = WOMPI_PUBLIC_KEY_SANDBOX;
+    console.log('[WOMPI] Modo SANDBOX');
+  }
 
   if (!txId) {
     setResult(
@@ -36,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   try {
-    // 1. Consultar transacción en Wompi
+    // 2) Consultar transacción en Wompi
     const tx = await fetchTransaction(txId);
 
     if (!tx) {
@@ -48,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // 2. Validar estado, monto y moneda
+    // 3) Validar estado, monto y moneda
     if (tx.status !== 'APPROVED') {
       setResult(
         `<h2>Pago no aprobado</h2>
@@ -71,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // 3. Intentar leer el correo del pago (si viene)
+    // 4) Intentar leer el correo del pago (si viene)
     const rawEmail =
       tx.customer_email ||
       tx.customerEmail ||
@@ -82,7 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentUser =
       JSON.parse(localStorage.getItem('legado_currentUser')) || null;
 
-    // ================== CASO 1: NO HAY SESIÓN ==================
+    // ===== CASO 1: NO HAY SESIÓN =====
     if (!currentUser) {
       if (emailPago) {
         localStorage.setItem('legado_pendingPaidEmail', emailPago);
@@ -102,22 +119,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // ================== CASO 2: HAY SESIÓN ==================
+    // ===== CASO 2: HAY SESIÓN =====
     const userEmail = (currentUser.email || '').toLowerCase();
 
-    // Si viene correo del pago y es distinto, solo avisamos en consola,
-    // pero igualmente activamos al usuario actual (como tú querías).
     if (emailPago && userEmail && emailPago !== userEmail) {
       console.warn(
         'El correo del pago no coincide con el de la sesión.',
         'Sesion:', userEmail,
         'Pago:', emailPago
       );
-      // Podrías mostrar un mensajito suave al usuario si quieres,
-      // pero NO bloqueamos la activación.
+      // No bloqueamos la activación, solo lo dejamos logueado.
     }
 
-    // 4. Actualizar perfil en Supabase (usuario actual)
+    // 5) Actualizar perfil en Supabase (usuario actual)
     let updateError = null;
 
     if (supabaseClient) {
@@ -156,7 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // 5. Todo OK: mensaje y redirección al dashboard
+    // 6) Todo OK: mensaje y redirección al dashboard
     setResult(
       `<h2>¡Pago aprobado y cuenta activada! 🎉</h2>
        <p>Tu perfil de creador está listo.</p>
@@ -178,7 +192,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ================== HELPERS ==================
-
 async function fetchTransaction(id) {
   const res = await fetch(`${WOMPI_BASE_URL}/v1/transactions/${id}`, {
     headers: {
